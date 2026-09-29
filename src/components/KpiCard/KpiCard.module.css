@@ -1,0 +1,61 @@
+.card {
+  padding: var(--space-4);
+}
+
+.etiqueta {
+  font-size: 0.625rem;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--ink-subtle);
+}
+
+.valor {
+  font-size: 1.375rem;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  font-variant-numeric: tabular-nums;
+  margin-top: 6px;
+}
+
+.unidad {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  letter-spacing: 0;
+  margin-left: 4px;
+}
+
+.contexto {
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--ink-muted);
+  margin-top: 3px;
+}
+
+.neutro { color: var(--ink-muted); }
+.bueno { color: var(--success); }
+.malo { color: var(--critical); }
+.alerta { color: var(--warning); }
+
+.barra {
+  height: 5px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.barra > i {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-sm);
+}
+
+.b_brand { background: var(--brand-mid); }
+.b_ok { background: var(--success); }
+.b_alerta { background: var(--warning); }
+.b_critico { background: var(--critical); }

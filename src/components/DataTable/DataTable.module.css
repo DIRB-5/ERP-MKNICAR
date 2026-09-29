@@ -1,0 +1,80 @@
+.wrap {
+  padding: 0;
+  overflow: hidden;
+}
+
+.scroll {
+  overflow-x: auto;
+}
+
+/* El contenedor es de vidrio; el cuerpo de la tabla, sólido. */
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.tabla th {
+  background: var(--surface-raised);
+  color: var(--ink-subtle);
+  font-size: 0.625rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  text-align: left;
+  padding: 7px var(--space-3);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.tabla td {
+  padding: 8px var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  vertical-align: middle;
+  height: var(--row-height);
+}
+
+.compacta td {
+  height: var(--row-height-compact);
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.tabla tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tabla tbody tr:hover {
+  background: var(--brand-tint);
+}
+
+.sel,
+.tabla tbody tr.sel:hover {
+  background: var(--brand-soft);
+}
+
+.der {
+  text-align: right;
+}
+
+.fija {
+  position: sticky;
+  left: 0;
+  background: inherit;
+  z-index: 1;
+}
+
+.tabla th.fija {
+  background: var(--surface-raised);
+  z-index: 2;
+}
+
+.vacio {
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+}

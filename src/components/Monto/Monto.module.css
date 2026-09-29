@@ -1,0 +1,14 @@
+.monto {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.xl { font-size: 1.625rem; line-height: 1.05; font-weight: 700; letter-spacing: -0.8px; }
+.md { font-size: 1.375rem; line-height: 1.1; font-weight: 700; letter-spacing: -0.6px; }
+.sm { font-size: 0.875rem; line-height: 1.25; font-weight: 700; letter-spacing: -0.2px; }
+.tabla { font-size: 0.75rem; line-height: 1.4; font-weight: 600; }
+.densa { font-size: 0.6875rem; line-height: 1.35; font-weight: 600; }
+
+.malo { color: var(--critical); }
+.bueno { color: var(--success); }
+.plano { color: var(--ink-subtle); }

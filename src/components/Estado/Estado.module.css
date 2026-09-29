@@ -1,0 +1,19 @@
+.chip {
+  display: inline-block;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  font-weight: 600;
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-xs);
+  white-space: nowrap;
+}
+
+.espera { background: var(--warning-soft); color: var(--warning); }
+.critico { background: var(--critical-soft); color: var(--critical); }
+.activo { background: var(--brand-soft); color: var(--brand-mid); }
+.cerrado { background: var(--success-soft); color: var(--success); }
+.futuro { background: var(--neutral-soft); color: var(--neutral); }
+
+.vidrio.espera { background: var(--glass-warning); }
+.vidrio.critico { background: var(--glass-danger); }
+.vidrio.cerrado { background: var(--glass-success); }

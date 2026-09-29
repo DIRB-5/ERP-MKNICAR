@@ -1,0 +1,20 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.contenido {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  animation: fade-vista 160ms ease-out;
+}
+
+.centro {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-5) var(--gutter) var(--space-10);
+}

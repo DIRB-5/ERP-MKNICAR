@@ -1,0 +1,44 @@
+.surface {
+  position: relative;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+}
+
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+}
+
+.strong {
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+}
+
+/* El dato no se lee sobre traslúcido. */
+.solid {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.critico {
+  background: var(--glass-danger);
+  border-color: var(--critical-border);
+}
+
+.alerta {
+  background: var(--glass-warning);
+  border-color: var(--warning-border);
+}
+
+.ok {
+  background: var(--glass-success);
+  border-color: var(--success-border);
+}
+
+.elev_none { box-shadow: var(--shadow-inset); }
+.elev_card { box-shadow: var(--shadow-inset), var(--shadow-card); }
+.elev_raised { box-shadow: var(--shadow-inset), var(--shadow-raised); }
+.elev_float { box-shadow: var(--shadow-inset), var(--shadow-float); }
+.elev_modal { box-shadow: var(--shadow-inset), var(--shadow-modal); }

@@ -1,0 +1,103 @@
+.lista {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.nodo {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding-bottom: 13px;
+}
+
+.nodo::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 14px;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+
+.next::before {
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--border-mid) 0 3px,
+    transparent 3px 6px
+  );
+}
+
+.ultimo::before {
+  display: none;
+}
+
+.punto {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-round);
+  flex: none;
+  margin-top: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+.done .punto { background: var(--dom); }
+.now .punto { background: var(--dom); }
+
+/* Única animación con significado del sistema. */
+.detenido .punto {
+  background: var(--critical);
+  animation: pulso-actual 2s ease-in-out infinite;
+}
+
+.next .punto {
+  background: var(--neutral-soft);
+  border: 2px solid var(--border-mid);
+}
+
+.cuerpo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.cuerpo b { font-size: 0.75rem; font-weight: 600; }
+.now .cuerpo b { font-weight: 700; }
+.next .cuerpo b { color: var(--ink-subtle); font-weight: 600; }
+
+.cuerpo span {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.next .cuerpo span { color: var(--ink-subtle); }
+
+.nodo em {
+  font-style: normal;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  min-width: 48px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.resumen {
+  display: flex;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  padding: 11px var(--space-4);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.resumen b { color: var(--ink); font-weight: 700; }
+
+.malo { color: var(--critical); }

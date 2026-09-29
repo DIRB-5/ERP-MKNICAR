@@ -1,0 +1,135 @@
+/* Lienzo, vidrio y fallbacks. Ver design-system/README del artifact. */
+
+:root {
+  /* Asset crítico: la identidad de vidrio depende de que cargue. */
+  --canvas-image: url("/background.png");
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  background: var(--canvas) var(--canvas-image, none) center / cover fixed no-repeat;
+}
+
+/* Velo sobre la fotografía de fondo */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: var(--canvas-veil);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+a {
+  color: var(--brand-mid);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--brand-hover);
+}
+
+::selection {
+  background: var(--brand);
+  color: var(--ink-inverse);
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-mid);
+  outline-offset: 2px;
+}
+
+/* ── El vidrio se apaga en estos tres casos. No quitarlos. ───────── */
+@supports not (backdrop-filter: blur(1px)) {
+  :root {
+    --glass: rgba(255, 255, 255, 0.94);
+    --glass-strong: rgba(255, 255, 255, 0.94);
+    --blur: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass: rgba(255, 255, 255, 0.94);
+    --glass-strong: rgba(255, 255, 255, 0.94);
+    --blur: none;
+  }
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+  body::before {
+    display: none;
+  }
+  * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* ── Movimiento: tres animaciones, ninguna más ───────────────────── */
+@keyframes fade-vista {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Única animación con significado: nodo actual de una O.S. detenida. */
+@keyframes pulso-actual {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(198, 40, 40, 0.28); }
+  50% { box-shadow: 0 0 0 7px rgba(198, 40, 40, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Barras de desplazamiento ────────────────────────────────────── */
+.scroll-x::-webkit-scrollbar,
+.scroll-y::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.scroll-x::-webkit-scrollbar-track,
+.scroll-y::-webkit-scrollbar-track {
+  background: var(--surface-sunken);
+}
+.scroll-x::-webkit-scrollbar-thumb,
+.scroll-y::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--surface-sunken);
+}

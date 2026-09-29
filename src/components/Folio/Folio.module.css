@@ -1,0 +1,21 @@
+.folio,
+.id {
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.folio {
+  color: var(--brand-mid);
+  text-decoration: none;
+}
+
+.folio:hover {
+  color: var(--brand-hover);
+  text-decoration: underline;
+}
+
+.id {
+  color: var(--ink);
+}
