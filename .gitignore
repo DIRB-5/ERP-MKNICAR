@@ -8,3 +8,4 @@ dist
 
 # generado desde design-system/tokens.json
 src/styles/tokens.css
+*.tsbuildinfo
