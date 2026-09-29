@@ -118,7 +118,5 @@ su lógica está en plantillas `{{ }}` y sus datos viven dentro del archivo.
 - Contrato de la API con el backend (Omar).
 - Contexto de sesión: usuario, rol y taller activo. El scoping por taller va en
   la capa de datos desde el primer fetch, no se agrega después.
-- Copiar `assets/background.png` del export a `public/`. Es un asset crítico:
-  sin él la identidad de vidrio degrada a gris plano.
 - Medir `backdrop-filter` con una tabla de 200 filas antes de comprometer el
   vidrio en vistas densas.
