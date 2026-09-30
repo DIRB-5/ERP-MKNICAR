@@ -239,3 +239,9 @@
   font-size: 0.75rem;
   color: var(--ink-muted);
 }
+
+.botonPrimario:disabled,
+.botonSecundario:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}

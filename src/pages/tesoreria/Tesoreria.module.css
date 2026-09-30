@@ -1,0 +1,301 @@
+/* Piezas compartidas por Cuentas por pagar y Cuentas por cobrar. */
+
+.nota {
+  font-weight: 400;
+  color: var(--ink-subtle);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(16rem, 22vw, 21rem);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+.principal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2) var(--space-3);
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--ink-subtle);
+}
+
+.campo select {
+  height: 1.875rem;
+  min-width: 10rem;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.limpiar {
+  height: 1.875rem;
+  padding: 0 var(--space-2);
+  border: none;
+  background: transparent;
+  color: var(--brand-mid);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Tabla agrupada: el cuerpo es dato, siempre sólido. */
+.scroll { overflow-x: auto; }
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  font-size: 0.6875rem;
+}
+
+.tabla th {
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-subtle);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.tabla td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--ink-muted);
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.der { text-align: right; font-variant-numeric: tabular-nums; }
+
+.grupo td {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.grupo:hover td { background: var(--brand-tint); }
+
+.detalle td {
+  background: var(--surface-raised);
+  font-weight: 400;
+}
+
+.detalle td:first-child { padding-left: var(--space-8); }
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.flecha {
+  display: inline-block;
+  width: 0.75rem;
+  color: var(--ink-subtle);
+}
+
+.secundario {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 400;
+  color: var(--ink-subtle);
+}
+
+.malo { color: var(--critical); }
+
+.pie td {
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-weight: 700;
+  border-bottom: none;
+}
+
+/* Barra de antigüedad de un cliente: cuatro tramos, cada uno con su valor en el título. */
+.antiguedad {
+  display: flex;
+  gap: var(--space-0\.5);
+  width: 7rem;
+  height: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.antiguedad > i { display: block; height: 100%; }
+
+.tPorVencer, .lPorVencer { background: var(--success); }
+.t30, .l30 { background: var(--data-3); }
+.t60, .l60 { background: var(--data-2); }
+.tMas60, .lMas60 { background: var(--critical); }
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+}
+
+.leyenda span { display: inline-flex; align-items: center; gap: var(--space-1); }
+.leyenda i { width: 8px; height: 8px; border-radius: var(--radius-xs); }
+
+/* Barra lateral */
+.lateral {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-4);
+}
+
+.lateralTitulo {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.lateralSub {
+  margin-top: var(--space-1);
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+}
+
+.seccionLateral {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.calendario {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--border);
+  overflow: hidden;
+}
+
+.calDia,
+.calCabeza {
+  min-height: 2.5rem;
+  padding: var(--space-1);
+  background: var(--surface);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.calCabeza {
+  min-height: auto;
+  background: var(--surface-raised);
+  color: var(--ink-subtle);
+  font-weight: 600;
+  text-align: center;
+}
+
+.calFuera { background: var(--surface-sunken); color: var(--ink-subtle); }
+.calHoy { outline: 2px solid var(--brand-mid); outline-offset: -2px; }
+.calSemana { background: var(--brand-tint); }
+
+.calMonto {
+  display: block;
+  margin-top: var(--space-0\.5);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.itemLista {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: 0.75rem;
+}
+
+.propuesta {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-1) var(--space-2);
+  align-items: start;
+  cursor: pointer;
+}
+
+.propuesta input { margin-top: var(--space-0\.5); accent-color: var(--brand); }
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.aviso {
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+}
+
+.vacioLateral {
+  padding: var(--space-4);
+  border: 1px dashed var(--border-mid);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.vacioPanel { padding: 0 var(--space-4) var(--space-4); }

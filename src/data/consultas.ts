@@ -2,12 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   DatosAltaCliente,
   DatosAltaOS,
+  DatosAltaProducto,
+  DatosAltaProveedor,
   DatosAltaRapidaUnidad,
   DatosAltaUnidad,
   DatosRecepcion,
 } from "@/domain/tipos";
-import { clienteRepo, ordenServicioRepo, unidadRepo } from "./index";
-import type { FiltrosClientes, FiltrosUnidades } from "./repositorios";
+import { catalogoRepo, clienteRepo, ordenServicioRepo, personalRepo, tesoreriaRepo, unidadRepo } from "./index";
+import type { FiltrosClientes, FiltrosProductos, FiltrosProveedores, FiltrosUnidades } from "./repositorios";
 
 export const useClientes = (f: FiltrosClientes) =>
   useQuery({ queryKey: ["clientes", "lista", f], queryFn: () => clienteRepo.listar(f) });
@@ -90,3 +92,73 @@ export function useCrearUnidad() {
   const invalidar = useInvalidar();
   return useMutation({ mutationFn: (d: DatosAltaUnidad) => unidadRepo.crear(d), onSuccess: invalidar });
 }
+
+/* ── Tesorería ───────────────────────────────────────────────────── */
+
+export const useDashboardFinanciero = (alcance: string, periodo: string) =>
+  useQuery({
+    queryKey: ["tesoreria", "dashboard", alcance, periodo],
+    queryFn: () => tesoreriaRepo.dashboard(alcance, periodo),
+  });
+
+export const useCuentasPorPagar = (alcance: string) =>
+  useQuery({ queryKey: ["tesoreria", "cxp", alcance], queryFn: () => tesoreriaRepo.cuentasPorPagar(alcance) });
+
+export const useCuentasPorCobrar = (alcance: string) =>
+  useQuery({ queryKey: ["tesoreria", "cxc", alcance], queryFn: () => tesoreriaRepo.cuentasPorCobrar(alcance) });
+
+/* ── Catálogo de proveedores y productos ─────────────────────────── */
+
+export const useCategorias = () =>
+  useQuery({ queryKey: ["catalogo", "categorias"], queryFn: () => catalogoRepo.categorias() });
+
+export const useProductos = (f: FiltrosProductos) =>
+  useQuery({ queryKey: ["catalogo", "productos", f], queryFn: () => catalogoRepo.productos(f) });
+
+export const useProducto = (id: string) =>
+  useQuery({ queryKey: ["catalogo", "producto", id], queryFn: () => catalogoRepo.producto(id), enabled: id !== "" });
+
+export const useProveedores = (f: FiltrosProveedores) =>
+  useQuery({ queryKey: ["catalogo", "proveedores", f], queryFn: () => catalogoRepo.proveedores(f) });
+
+export const useProveedor = (id: string) =>
+  useQuery({ queryKey: ["catalogo", "proveedor", id], queryFn: () => catalogoRepo.proveedor(id), enabled: id !== "" });
+
+export function useCrearProveedor() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (d: DatosAltaProveedor) => catalogoRepo.crearProveedor(d),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["catalogo"] }),
+  });
+}
+
+function useInvalidarCatalogo() {
+  const qc = useQueryClient();
+  return () => qc.invalidateQueries({ queryKey: ["catalogo"] });
+}
+
+export function useCrearProducto() {
+  const invalidar = useInvalidarCatalogo();
+  return useMutation({ mutationFn: (d: DatosAltaProducto) => catalogoRepo.crearProducto(d), onSuccess: invalidar });
+}
+
+export function useCrearCategoria() {
+  const invalidar = useInvalidarCatalogo();
+  return useMutation({ mutationFn: (nombre: string) => catalogoRepo.crearCategoria(nombre), onSuccess: invalidar });
+}
+
+export function useCrearSubcategoria() {
+  const invalidar = useInvalidarCatalogo();
+  return useMutation({
+    mutationFn: (v: { categoriaId: string; nombre: string }) => catalogoRepo.crearSubcategoria(v.categoriaId, v.nombre),
+    onSuccess: invalidar,
+  });
+}
+
+/* ── Personal ────────────────────────────────────────────────────── */
+
+export const useDashboardPersonal = (alcance: string, periodo: string) =>
+  useQuery({
+    queryKey: ["personal", "dashboard", alcance, periodo],
+    queryFn: () => personalRepo.dashboard(alcance, periodo),
+  });

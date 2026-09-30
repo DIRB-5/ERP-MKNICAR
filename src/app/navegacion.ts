@@ -9,17 +9,31 @@ export const NAVEGACION: readonly ItemNav[] = [
   { etiqueta: "Órdenes de Servicio", to: "/ordenes" },
   { etiqueta: "Cotizaciones", proximamente: true },
   { etiqueta: "Compras", proximamente: true },
-  { etiqueta: "Tesorería", proximamente: true },
+  {
+    etiqueta: "Tesorería",
+    to: "/tesoreria",
+    submenu: [
+      { etiqueta: "Dashboard financiero", to: "/tesoreria" },
+      { etiqueta: "Cuentas por pagar", to: "/tesoreria/cuentas-por-pagar" },
+      { etiqueta: "Cuentas por cobrar", to: "/tesoreria/cuentas-por-cobrar" },
+    ],
+  },
   { etiqueta: "Almacén", proximamente: true },
   { etiqueta: "Facturación", proximamente: true },
+  {
+    etiqueta: "Personal",
+    to: "/personal",
+    submenu: [{ etiqueta: "Dashboard personal y mano de obra", to: "/personal" }],
+  },
   { etiqueta: "Reportes", proximamente: true },
   {
     etiqueta: "Catálogos",
     to: "/clientes",
-    tambienEn: ["/unidades"],
+    tambienEn: ["/unidades", "/productos", "/proveedores"],
     submenu: [
       { etiqueta: "Clientes", to: "/clientes" },
       { etiqueta: "Unidades", to: "/unidades" },
+      { etiqueta: "Proveedores y productos", to: "/productos" },
     ],
   },
   { etiqueta: "Administración", proximamente: true },

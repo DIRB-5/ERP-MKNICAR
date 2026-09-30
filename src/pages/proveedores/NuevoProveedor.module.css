@@ -1,0 +1,49 @@
+.domicilio {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(8rem, 1fr);
+  gap: var(--space-3);
+}
+
+@media (max-width: 800px) {
+  .domicilio { grid-template-columns: 1fr; }
+}
+
+.categorias,
+.contacto {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  min-width: 0;
+}
+
+.contacto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.leyenda {
+  padding: 0 var(--space-1);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.nota { margin: 0; font-size: 0.75rem; color: var(--ink-muted); }
+
+.opciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: var(--space-2) var(--space-4);
+}
+
+.casilla {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.casilla input { width: 1rem; height: 1rem; accent-color: var(--brand); }

@@ -98,3 +98,15 @@
   text-overflow: ellipsis;
   max-width: 100%;
 }
+
+/* Modo agrupado: barras lado a lado con 2px de separación. */
+.grupo {
+  max-width: 5rem;
+  gap: var(--space-0\.5);
+}
+
+.barra {
+  flex: 1;
+  min-height: 2px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}

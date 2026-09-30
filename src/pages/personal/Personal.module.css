@@ -1,0 +1,44 @@
+/* La tabla por taller necesita más ancho que la composición de la plantilla. */
+.fila21 {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+@media (max-width: 1100px) {
+  .fila21 { grid-template-columns: 1fr; }
+}
+
+.totales {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.aviso { padding: var(--space-3) var(--space-4) var(--space-4); }
+.avisoInterno { margin-top: var(--space-3); }
+
+.tecnico {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+  border-radius: var(--radius-round);
+  background: var(--brand-soft);
+  color: var(--brand-mid);
+  font-size: 0.5625rem;
+  font-weight: 700;
+}

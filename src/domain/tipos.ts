@@ -242,3 +242,377 @@ export interface DatosAltaRapidaUnidad {
   anio: number;
   clienteId: string;
 }
+
+/* ── Tesorería: vistas de lectura que arma el backend ─────────────── */
+
+/** Cartera por antigüedad. `porVencer` aún no vence; los demás son días vencidos. */
+export interface TramosCartera {
+  porVencer: number;
+  d1a30: number;
+  d31a60: number;
+  mas60: number;
+}
+
+export interface ResumenFinanciero {
+  facturadoMes: number;
+  metaMes: number;
+  porCobrar: number;
+  vencidoPorCobrar: number;
+  diasCartera: number;
+  facturasAbiertas: number;
+  porPagar: number;
+  venceEstaSemana: number;
+  ocPorLiquidar: number;
+  proveedores: number;
+  margenBruto: number;
+  margenVariacionPts: number;
+  utilidadBruta: number;
+}
+
+export interface MesFinanciero {
+  /** AAAA-MM. */
+  mes: string;
+  presupuestado: number;
+  facturado: number;
+  costoReal: number;
+}
+
+export interface IndicadoresPresupuesto {
+  /** Porcentaje con signo: facturado contra presupuestado. */
+  desviacionPromedio: number;
+  facturadasDebajoDelPresupuesto: number;
+  sinFacturarTrasRemision: number;
+}
+
+export interface FlujoTaller {
+  taller: TallerRef;
+  osFacturadas: number;
+  presupuestado: number;
+  facturado: number;
+  costoRefacciones: number;
+  costoManoObra: number;
+  porCobrar: number;
+  vencido: number;
+}
+
+export interface PorFacturar {
+  folioOs: string;
+  cliente: string;
+  monto: number;
+  diasDesdeRemision: number;
+}
+
+export interface VencimientoPago {
+  proveedor: string;
+  folioOc: string;
+  monto: number;
+  /** AAAA-MM-DD. */
+  vence: string;
+}
+
+export interface GastoProveedor {
+  proveedor: string;
+  ordenesCompra: number;
+  monto: number;
+  /** Porcentaje contra el mes anterior. */
+  variacion: number;
+}
+
+export interface DashboardFinanciero {
+  resumen: ResumenFinanciero | null;
+  meses: MesFinanciero[];
+  indicadores: IndicadoresPresupuesto | null;
+  cartera: TramosCartera | null;
+  flujo: FlujoTaller[];
+  porFacturar: PorFacturar[];
+  vencimientos: VencimientoPago[];
+  proveedores: GastoProveedor[];
+}
+
+/* Cuentas por pagar */
+
+export type AutorizacionPago = "pendiente" | "autorizada" | "rechazada";
+export type EstadoPago = "por_programar" | "programada" | "pagada";
+
+export interface FacturaProveedor {
+  folio: string;
+  folioOc: string;
+  /** O.S. que originó el gasto; null si la O.C. no viene de una O.S. */
+  folioOs: string | null;
+  /** AAAA-MM-DD. */
+  emision: string;
+  vence: string;
+  monto: number;
+  saldo: number;
+  /** 0 si aún no vence. */
+  diasVencida: number;
+  /** La autoriza Dirección: es el punto de espera `autorizacion_oc`. */
+  autorizacion: AutorizacionPago;
+  pago: EstadoPago;
+}
+
+export interface SaldoProveedor {
+  id: string;
+  nombre: string;
+  categoria: string;
+  ocAbiertas: number;
+  creditoDias: number;
+  /** Porcentaje de entregas a tiempo. */
+  cumplimiento: number;
+  facturas: FacturaProveedor[];
+}
+
+/* Cuentas por cobrar (fuera de la fase 1: se muestra vacío hasta que exista el módulo) */
+
+export type EstadoFacturaCliente = "por_vencer" | "vencida" | "pago_parcial";
+
+export interface FacturaCliente {
+  folio: string;
+  foliosOs: string[];
+  emision: string;
+  vence: string;
+  monto: number;
+  saldo: number;
+  diasVencida: number;
+  estado: EstadoFacturaCliente;
+}
+
+export interface CarteraCliente {
+  cliente: { id: string; razonSocial: string };
+  unidades: number;
+  diasPromedioPago: number;
+  tramos: TramosCartera;
+  facturas: FacturaCliente[];
+}
+
+export interface AccionCobranza {
+  id: string;
+  texto: string;
+  detalle: string;
+  accion: string;
+}
+
+export interface GestionCobranza {
+  id: string;
+  cliente: string;
+  /** AAAA-MM-DD. */
+  fecha: string;
+  tipo: string;
+  resultado: string;
+}
+
+export interface CuentasPorCobrar {
+  clientes: CarteraCliente[];
+  acciones: AccionCobranza[];
+  gestiones: GestionCobranza[];
+}
+
+/* ── Catálogo de proveedores y productos ─────────────────────────── */
+
+export interface Subcategoria {
+  id: string;
+  nombre: string;
+  /** Productos en la subcategoría. */
+  total: number;
+}
+
+/** Las categorías son dato del catálogo, no constantes del código. */
+export interface CategoriaProducto {
+  id: string;
+  nombre: string;
+  total: number;
+  subcategorias: Subcategoria[];
+}
+
+export type TipoProducto = "original" | "oem" | "generico" | "reconstruido";
+
+export interface Producto {
+  id: string;
+  numeroParte: string;
+  descripcion: string;
+  marca: string;
+  categoria: { id: string; nombre: string };
+  subcategoria: { id: string; nombre: string } | null;
+  tipo: TipoProducto;
+  /** Pieza, juego, metro, cubeta… */
+  unidadMedida: string;
+  /** null mientras no exista el módulo de inventarios. */
+  existencia: number | null;
+  proveedores: number;
+  ultimoCosto: number;
+  costoPromedio: number;
+  precioSugerido: number;
+}
+
+export type Disponibilidad = "inmediata" | "sobre_pedido" | "agotado";
+
+export interface PrecioProveedor {
+  proveedor: { id: string; nombre: string };
+  precio: number;
+  /** AAAA-MM-DD de la última cotización o compra. */
+  fecha: string;
+  entregaDias: number;
+  disponibilidad: Disponibilidad;
+}
+
+export interface DetalleProducto {
+  producto: Producto;
+  precios: PrecioProveedor[];
+  /** Costo por mes, AAAA-MM, de los últimos doce meses. */
+  historicoCosto: { mes: string; costo: number }[];
+  unidadesCompradasAnio: number;
+  osDondeSeUso: number;
+  talleres: { taller: TallerRef; unidades: number }[];
+}
+
+export type EstadoProveedor = "activo" | "suspendido";
+
+export interface Proveedor {
+  id: string;
+  razonSocial: string;
+  rfc: string;
+  /** Nombres de las categorías que surte. */
+  categorias: string[];
+  productos: number;
+  creditoDias: number;
+  entregaPromedioDias: number;
+  /** Porcentaje de entregas a tiempo. */
+  cumplimiento: number;
+  comprasAnio: number;
+  /** 1 a 5. */
+  calificacion: number;
+  estado: EstadoProveedor;
+}
+
+export interface ContactoProveedor {
+  nombre: string;
+  puesto: string;
+  telefono: string;
+  correo: string;
+}
+
+export interface DetalleProveedor {
+  proveedor: Proveedor;
+  regimenFiscal: string;
+  usoCfdi: string;
+  domicilioFiscal: string;
+  contactos: ContactoProveedor[];
+  /** Porcentaje de piezas devueltas. */
+  devoluciones: number;
+  ordenes: { folio: string; detalle: string; monto: number; estado: string }[];
+}
+
+/** Alta de proveedor. Todo proveedor nace activo; suspenderlo es decisión de Abastecimiento. */
+export interface DatosAltaProveedor {
+  razonSocial: string;
+  rfc: string;
+  /** Clave del catálogo c_RegimenFiscal del SAT, p. ej. "601". */
+  regimenFiscal: string;
+  /** Clave del catálogo c_UsoCFDI del SAT, p. ej. "G01". */
+  usoCfdi: string;
+  codigoPostal: string;
+  domicilioFiscal: string;
+  categoriaIds: string[];
+  creditoDias: number;
+  /** CLABE interbancaria para transferencias de Tesorería; null si aún no se tiene. */
+  clabe: string | null;
+  contactos: ContactoProveedor[];
+}
+
+export interface PrecioAlta {
+  proveedorId: string;
+  precio: number;
+  entregaDias: number;
+  disponibilidad: Disponibilidad;
+}
+
+/** Alta de producto. Los costos se derivan de los precios de sus proveedores. */
+export interface DatosAltaProducto {
+  numeroParte: string;
+  descripcion: string;
+  marca: string;
+  categoriaId: string;
+  subcategoriaId: string | null;
+  tipo: TipoProducto;
+  unidadMedida: string;
+  precioSugerido: number;
+  precios: PrecioAlta[];
+}
+
+/* ── Personal y mano de obra (fuera de la fase 1: vacío hasta que exista el módulo) ── */
+
+export interface ResumenPersonal {
+  plantilla: number;
+  talleres: number;
+  turnos: number;
+  tecnicosProductivos: number;
+  /** Costo integrado con prestaciones. */
+  costoNomina: number;
+  /** Porcentaje del ingreso del periodo. */
+  nominaSobreIngreso: number;
+  metaNominaSobreIngreso: number;
+  /** Horas aplicadas a O.S. sobre horas disponibles, en porcentaje. */
+  recuperacionHoras: number;
+  objetivoRecuperacion: number;
+}
+
+export interface PersonalTaller {
+  taller: TallerRef;
+  tecnicos: number;
+  asesores: number;
+  administrativos: number;
+  costoMensual: number;
+  horasDisponibles: number;
+  horasAplicadas: number;
+  /** Ingreso del periodo, para calcular nómina sobre ingreso. */
+  ingreso: number;
+}
+
+export interface CapacidadTaller {
+  taller: TallerRef;
+  horasDisponibles: number;
+  /** Horas que piden las O.S. abiertas. */
+  horasDemandadas: number;
+}
+
+export type EstadoCertificacion = "vigente" | "por_vencer" | "vencida";
+
+export interface Certificacion {
+  nombre: string;
+  personas: number;
+  /** Talleres con al menos una persona certificada, de los seis. */
+  talleresCubiertos: number;
+  talleresTotales: number;
+  /** AAAA-MM-DD del próximo vencimiento; null si no vence. */
+  vence: string | null;
+  estado: EstadoCertificacion;
+  talleresSinCobertura: string[];
+}
+
+/**
+ * Productividad por técnico. Sin sueldo individual: el costo por hora es el
+ * de su puesto en su taller.
+ */
+export interface ProductividadTecnico {
+  id: string;
+  nombre: string;
+  taller: string;
+  puesto: string;
+  horasDisponibles: number;
+  horasAplicadas: number;
+  horasFacturadas: number;
+  ordenes: number;
+  retrabajos: number;
+  costoHora: number;
+}
+
+export interface DashboardPersonal {
+  resumen: ResumenPersonal | null;
+  talleres: PersonalTaller[];
+  puestos: { puesto: string; personas: number }[];
+  antiguedadPromedioAnios: number | null;
+  rotacionAnual: number | null;
+  capacidad: CapacidadTaller[];
+  certificaciones: Certificacion[];
+  tecnicos: ProductividadTecnico[];
+}

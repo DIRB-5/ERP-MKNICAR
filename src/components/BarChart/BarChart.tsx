@@ -22,13 +22,18 @@ export interface BarChartProps {
   nombreMeta?: string;
   formato: (valor: number) => string;
   vacio?: string;
+  /**
+   * `apilado` suma las series (partes de un total); `agrupado` las pone lado
+   * a lado para compararlas (medidas distintas del mismo periodo).
+   */
+  modo?: "apilado" | "agrupado";
 }
 
 /**
  * Barras verticales apiladas con meta opcional. Cada barra lleva su total
  * escrito arriba: el color nunca es el único portador del valor.
  */
-export function BarChart({ series, categorias, nombreMeta, formato, vacio }: BarChartProps) {
+export function BarChart({ series, categorias, nombreMeta, formato, vacio, modo = "apilado" }: BarChartProps) {
   const leyenda = (
     <div className={styles.leyenda}>
       {series.map((s) => (
@@ -55,9 +60,12 @@ export function BarChart({ series, categorias, nombreMeta, formato, vacio }: Bar
     );
   }
 
+  const agrupado = modo === "agrupado";
   const max = Math.max(
     1,
-    ...categorias.map((c) => Math.max(c.valores.reduce((a, v) => a + v, 0), c.meta ?? 0))
+    ...categorias.map((c) =>
+      Math.max(agrupado ? Math.max(...c.valores) : c.valores.reduce((a, v) => a + v, 0), c.meta ?? 0)
+    )
   );
 
   return (
@@ -72,20 +80,35 @@ export function BarChart({ series, categorias, nombreMeta, formato, vacio }: Bar
           ].join(" · ");
           return (
             <div key={c.etiqueta} className={styles.columna} role="listitem" title={`${c.etiqueta} · ${detalle}`}>
-              <div className={styles.total}>{formato(total)}</div>
-              <div className={styles.pista}>
-                <div className={styles.pila} style={{ height: `${(total / max) * 100}%` }}>
+              {!agrupado && <div className={styles.total}>{formato(total)}</div>}
+              {agrupado ? (
+                <div className={`${styles.pista} ${styles.grupo}`}>
                   {series.map((s, i) => {
                     const v = c.valores[i] ?? 0;
-                    return total > 0 && v > 0 ? (
-                      <div key={s.nombre} style={{ flexGrow: v, background: s.color }} />
-                    ) : null;
+                    return (
+                      <div
+                        key={s.nombre}
+                        className={styles.barra}
+                        style={{ height: `${(v / max) * 100}%`, background: s.color }}
+                      />
+                    );
                   })}
                 </div>
-                {c.meta != null && (
-                  <div className={styles.meta} style={{ bottom: `${(c.meta / max) * 100}%` }} />
-                )}
-              </div>
+              ) : (
+                <div className={styles.pista}>
+                  <div className={styles.pila} style={{ height: `${(total / max) * 100}%` }}>
+                    {series.map((s, i) => {
+                      const v = c.valores[i] ?? 0;
+                      return total > 0 && v > 0 ? (
+                        <div key={s.nombre} style={{ flexGrow: v, background: s.color }} />
+                      ) : null;
+                    })}
+                  </div>
+                  {c.meta != null && (
+                    <div className={styles.meta} style={{ bottom: `${(c.meta / max) * 100}%` }} />
+                  )}
+                </div>
+              )}
               <div className={styles.etiqueta}>{c.etiqueta}</div>
             </div>
           );

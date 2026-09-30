@@ -63,7 +63,8 @@
 }
 
 .hoy {
-  box-shadow: inset 0 0 0 2px var(--brand-mid);
+  outline: 2px solid var(--brand-mid);
+  outline-offset: -2px;
 }
 
 .hoy .numero {

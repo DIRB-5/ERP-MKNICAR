@@ -26,3 +26,18 @@ export function telefonoValido(t: string): boolean {
   const d = t.replace(/[^\d]/g, "").replace(/^52(?=\d{10}$)/, "");
   return d.length === 10;
 }
+
+/** Código postal mexicano: cinco dígitos. CFDI 4.0 lo exige en el domicilio fiscal. */
+export const codigoPostalValido = (cp: string) => /^\d{5}$/.test(cp.trim());
+
+/**
+ * CLABE: 18 dígitos; el último es verificador (pesos 3, 7, 1 sobre los
+ * primeros 17). Detecta la mayoría de los errores de captura.
+ */
+export function clabeValida(clabe: string): boolean {
+  const d = clabe.replace(/\s/g, "");
+  if (!/^\d{18}$/.test(d)) return false;
+  const pesos = [3, 7, 1];
+  const suma = [...d.slice(0, 17)].reduce((a, c, i) => a + ((Number(c) * (pesos[i % 3] ?? 1)) % 10), 0);
+  return (10 - (suma % 10)) % 10 === Number(d[17]);
+}

@@ -61,6 +61,8 @@ function ConSubmenu({ item, children }: { item: ItemNav; children: ReactNode }) 
             <li key={s.to}>
               <NavLink
                 to={s.to}
+                // "/tesoreria" no debe marcarse dentro de "/tesoreria/cuentas-por-pagar".
+                end={item.submenu?.some((o) => o.to !== s.to && o.to.startsWith(`${s.to}/`))}
                 className={({ isActive }) => `${styles.subitem} ${isActive ? styles.subitemActivo : ""}`}
                 onClick={() => setPos(null)}
               >

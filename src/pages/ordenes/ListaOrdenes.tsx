@@ -9,7 +9,7 @@ import styles from "./Ordenes.module.css";
 // "Ingresos de hoy" es la vista por defecto; más adelante dependerá del rol.
 const VISTAS = [
   { id: "ingresos", etiqueta: "Ingresos de hoy" },
-  { id: "tablero", etiqueta: "Tablero" },
+  { id: "kanban", etiqueta: "Kanban" },
   { id: "tabla", etiqueta: "Tabla" },
   { id: "calendario", etiqueta: "Calendario" },
 ] as const;
@@ -22,8 +22,8 @@ export function Component() {
   // La vista vive en la URL para que un enlace compartido abra la misma.
   const [params, setParams] = useSearchParams();
   const crudo = params.get("vista");
-  // "kanban" era el nombre anterior del tablero: los enlaces viejos siguen sirviendo.
-  const vista: Vista = crudo === "kanban" ? "tablero" : esVista(crudo) ? crudo : "ingresos";
+  // "tablero" fue su nombre un tiempo: los enlaces viejos siguen sirviendo.
+  const vista: Vista = crudo === "tablero" ? "kanban" : esVista(crudo) ? crudo : "ingresos";
 
   const cambiarVista = (v: Vista) => {
     const siguiente = new URLSearchParams(params);
@@ -43,7 +43,7 @@ export function Component() {
         </Link>
       </header>
       {vista === "ingresos" && <ColaIngresos />}
-      {vista === "tablero" && <KanbanOrdenes />}
+      {vista === "kanban" && <KanbanOrdenes />}
       {vista === "tabla" && <TablaOrdenes />}
       {vista === "calendario" && <CalendarioEntregas />}
     </div>
