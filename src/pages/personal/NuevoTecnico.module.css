@@ -1,0 +1,56 @@
+.subtitulo { margin-bottom: var(--space-2); font-size: 0.75rem; font-weight: 600; }
+.nota { margin: 0; font-size: 0.75rem; color: var(--ink-muted); }
+
+.especialidades {
+  list-style: none;
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.especialidades li { display: inline-flex; align-items: center; gap: var(--space-1); }
+
+.quitar {
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--ink-subtle);
+  font: inherit;
+  font-size: 0.625rem;
+  cursor: pointer;
+}
+
+.quitar:hover { background: var(--nav-hover); color: var(--ink); }
+
+.agregar { display: flex; gap: var(--space-2); max-width: 28rem; }
+
+/* Cada certificación es dato editable: tarjeta sólida. */
+.cert {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  min-width: 0;
+}
+
+.leyenda { padding: 0 var(--space-1); font-size: 0.75rem; font-weight: 600; }
+
+.certCampos {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.quitarFila { padding-top: var(--space-5); }
+
+@media (max-width: 800px) {
+  .certCampos { grid-template-columns: 1fr; }
+  .quitarFila { padding-top: 0; }
+}

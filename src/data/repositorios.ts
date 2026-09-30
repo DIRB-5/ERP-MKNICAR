@@ -10,6 +10,7 @@ import type {
   DatosAltaProducto,
   DatosAltaProveedor,
   DatosAltaRapidaUnidad,
+  DatosAltaTecnico,
   DatosAltaUnidad,
   DatosRecepcion,
   DetalleProducto,
@@ -129,4 +130,6 @@ export interface PersonalRepo {
   tecnico(id: string): Promise<PerfilTecnico | null>;
   /** Quiénes pueden recibir unidades en ese taller. */
   receptores(tallerId: string): Promise<PersonaReceptora[]>;
+  /** Rechaza un número de empleado que ya exista. Devuelve el id del técnico. */
+  crearTecnico(datos: DatosAltaTecnico): Promise<{ id: string }>;
 }

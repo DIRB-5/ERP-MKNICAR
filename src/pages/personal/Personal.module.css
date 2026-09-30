@@ -218,3 +218,12 @@
 }
 
 .expediente dd { margin: var(--space-0\.5) 0 0; font-size: 0.8125rem; font-weight: 600; }
+
+/* Enlace con aspecto de botón primario en el encabezado. */
+.botonEnlace {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.botonEnlace:hover { background: var(--brand-hover); color: var(--ink-inverse); }

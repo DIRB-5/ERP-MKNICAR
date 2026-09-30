@@ -4,6 +4,7 @@ import type {
   DatosAltaOS,
   DatosAltaProducto,
   DatosAltaProveedor,
+  DatosAltaTecnico,
   DatosAltaRapidaUnidad,
   DatosAltaUnidad,
   DatosRecepcion,
@@ -172,3 +173,11 @@ export const useReceptores = (tallerId: string) =>
     queryFn: () => personalRepo.receptores(tallerId),
     enabled: tallerId !== "",
   });
+
+export function useCrearTecnico() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (d: DatosAltaTecnico) => personalRepo.crearTecnico(d),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["personal"] }),
+  });
+}

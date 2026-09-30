@@ -32,6 +32,7 @@ export const router = createBrowserRouter([
       { path: "tesoreria/cuentas-por-pagar", lazy: () => import("@/pages/tesoreria/CuentasPorPagar") },
       { path: "tesoreria/cuentas-por-cobrar", lazy: () => import("@/pages/tesoreria/CuentasPorCobrar") },
       { path: "personal", lazy: () => import("@/pages/personal/DashboardPersonal") },
+      { path: "personal/tecnicos/nuevo", lazy: () => import("@/pages/personal/NuevoTecnico") },
       { path: "personal/tecnicos/:id", lazy: () => import("@/pages/personal/PerfilTecnico") },
       { path: "*", lazy: () => import("@/pages/general/NoEncontrada") },
     ],

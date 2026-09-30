@@ -701,3 +701,33 @@ export interface PersonaReceptora {
   nombre: string;
   puesto: string;
 }
+
+export type TipoContrato = "indeterminado" | "determinado" | "por_obra";
+
+/**
+ * Alta de técnico. Habilidades y productividad no se capturan aquí: salen de
+ * la primera evaluación y de sus O.S.
+ */
+export interface DatosAltaTecnico {
+  nombre: string;
+  numeroEmpleado: string;
+  correo: string;
+  telefono: string;
+  puesto: string;
+  nivel: string;
+  tallerId: string;
+  turno: string;
+  /** AAAA-MM-DD. */
+  fechaIngreso: string;
+  tipoContrato: TipoContrato;
+  especialidades: string[];
+  /** Facultad de recibir unidades: lo pone en la lista "Recibe" de su taller. */
+  puedeRecibirUnidades: boolean;
+  /** Sueldo + prestaciones + carga social. */
+  costoMensualIntegrado: number;
+  horasDisponiblesMes: number;
+  certificaciones: CertificacionTecnico[];
+  /** Datos del expediente: solo RRHH y Dirección los ven después. */
+  curp: string | null;
+  nss: string | null;
+}

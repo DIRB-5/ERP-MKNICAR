@@ -23,7 +23,10 @@ export const NAVEGACION: readonly ItemNav[] = [
   {
     etiqueta: "Personal",
     to: "/personal",
-    submenu: [{ etiqueta: "Dashboard personal y mano de obra", to: "/personal" }],
+    submenu: [
+      { etiqueta: "Dashboard personal y mano de obra", to: "/personal" },
+      { etiqueta: "Nuevo técnico", to: "/personal/tecnicos/nuevo" },
+    ],
   },
   { etiqueta: "Reportes", proximamente: true },
   {

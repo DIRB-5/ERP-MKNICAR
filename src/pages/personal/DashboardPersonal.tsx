@@ -175,9 +175,12 @@ export function Component() {
           <button type="button" className={styles.boton} disabled title="Próximamente">
             Exportar
           </button>
-          <button type="button" className={`${styles.boton} ${styles.botonPrimario}`} disabled title="Próximamente">
+          <button type="button" className={styles.boton} disabled title="Próximamente">
             Reporte de nómina
           </button>
+          <Link to="/personal/tecnicos/nuevo" className={`${styles.boton} ${styles.botonPrimario} ${p.botonEnlace}`}>
+            + Nuevo técnico
+          </Link>
         </div>
       </header>
 
