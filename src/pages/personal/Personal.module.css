@@ -42,3 +42,179 @@
   font-size: 0.5625rem;
   font-weight: 700;
 }
+
+/* ── Perfil de técnico ─────────────────────────────────────────── */
+
+.migas { font-size: 0.75rem; color: var(--ink-muted); }
+
+.fila1 {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1fr) minmax(0, 2.4fr);
+  gap: var(--space-3);
+}
+
+@media (max-width: 1100px) {
+  .fila1 { grid-template-columns: 1fr; }
+}
+
+.ficha {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+}
+
+.fichaHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.avatarGrande {
+  display: inline-grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--radius-round);
+  background: var(--brand-soft);
+  color: var(--brand-mid);
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.nombre { margin: var(--space-1) 0 0; font-size: 1.1875rem; font-weight: 600; letter-spacing: -0.2px; }
+.puesto { font-size: 0.8125rem; font-weight: 600; color: var(--ink-muted); }
+.secundario { font-size: 0.6875rem; font-weight: 400; color: var(--ink-subtle); }
+.chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+
+.accionesFicha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-3);
+}
+
+.habilidades, .comparativo {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.habilidadHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+  font-size: 0.75rem;
+}
+
+.habilidadHead span:first-child { flex: 1; font-weight: 600; }
+.habilidadHead b { min-width: 2rem; text-align: right; font-variant-numeric: tabular-nums; }
+
+.pista {
+  position: relative;
+  display: block;
+  height: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+}
+
+.barra, .barraBrecha {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: var(--radius-sm);
+}
+
+.barra { background: var(--brand-mid); }
+.barraBrecha { background: var(--critical); }
+
+/* El promedio del taller es una marca vertical: se distingue por forma, no solo por color. */
+.marcaPromedio {
+  position: absolute;
+  top: calc(-1 * var(--space-1));
+  bottom: calc(-1 * var(--space-1));
+  width: 2px;
+  background: var(--ink);
+}
+
+.comparativo li {
+  display: grid;
+  grid-template-columns: minmax(7rem, 38%) 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 0.75rem;
+}
+
+.comparativoNombre { font-weight: 600; }
+.comparativoValor { min-width: 4rem; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.leyenda {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+}
+
+.leyenda span { display: inline-flex; align-items: center; gap: var(--space-1); }
+.muestraTecnico { width: 12px; height: 8px; border-radius: var(--radius-xs); background: var(--brand-mid); }
+.muestraPromedio { width: 2px; height: 12px; background: var(--ink); }
+
+/* Tablas y listas del perfil: el dato va sobre sólido. */
+.mini {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.6875rem;
+}
+
+.mini th {
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-subtle);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.mini td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.der { text-align: right; font-variant-numeric: tabular-nums; }
+
+.expediente {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.expediente dt {
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--ink-subtle);
+}
+
+.expediente dd { margin: var(--space-0\.5) 0 0; font-size: 0.8125rem; font-weight: 600; }

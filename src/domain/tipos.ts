@@ -616,3 +616,79 @@ export interface DashboardPersonal {
   certificaciones: Certificacion[];
   tecnicos: ProductividadTecnico[];
 }
+
+/* Perfil de técnico */
+
+export type NivelHabilidad = "basico" | "intermedio" | "avanzado" | "experto";
+
+export interface Habilidad {
+  nombre: string;
+  /** 0 a 100, de la última evaluación. */
+  valor: number;
+  nivel: NivelHabilidad;
+  /** Promedio del taller en la misma habilidad, para comparar. */
+  promedioTaller: number;
+}
+
+export interface CertificacionTecnico {
+  nombre: string;
+  /** AAAA-MM-DD. */
+  obtenida: string;
+  /** AAAA-MM-DD; null si no vence. */
+  vence: string | null;
+}
+
+export interface OrdenTecnico {
+  folio: string;
+  placas: string;
+  cliente: string;
+  servicio: string;
+  horasEstandar: number;
+  horasReales: number;
+  costoManoObra: number;
+  manoObraFacturada: number;
+  estado: EstadoOS;
+}
+
+export interface PerfilTecnico {
+  id: string;
+  nombre: string;
+  puesto: string;
+  nivel: string;
+  numeroEmpleado: string;
+  taller: TallerRef;
+  turno: string;
+  activo: boolean;
+  /** Especialidades que se muestran como etiquetas junto al nombre. */
+  especialidades: string[];
+  /** AAAA-MM-DD. */
+  fechaIngreso: string;
+  recuperacion: number;
+  recuperacionVariacionPts: number;
+  ordenesMes: number;
+  horasAplicadasMes: number;
+  horasDisponiblesMes: number;
+  retrabajos90Dias: number;
+  tasaRetrabajo: number;
+  tasaRetrabajoTaller: number;
+  /** Sueldo + prestaciones + carga social, por hora. */
+  costoHora: number;
+  costoMensual: number;
+  /** Porcentaje de la nómina de su taller. */
+  participacionNominaTaller: number;
+  /** Mano de obra facturada en sus O.S. del mes. */
+  valorGenerado: number;
+  relacionValorCostoTaller: number;
+  habilidades: Habilidad[];
+  /** AAAA-MM-DD de la última evaluación de habilidades. */
+  ultimaEvaluacion: string | null;
+  certificaciones: CertificacionTecnico[];
+  /** Últimos doce meses, AAAA-MM. */
+  meses: { mes: string; horasAplicadas: number; horasDisponibles: number }[];
+  /**
+   * Solo lo reciben RRHH y Dirección: el backend decide quién lo ve y manda
+   * null a los demás. El frontend nunca lo filtra por su cuenta.
+   */
+  expediente: { etiqueta: string; valor: string }[] | null;
+  ordenesRecientes: OrdenTecnico[];
+}

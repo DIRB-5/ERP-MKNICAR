@@ -20,4 +20,7 @@ export const personalRepoMemoria: PersonalRepo = {
       tecnicos: [],
     };
   },
+  async tecnico() {
+    return null;
+  },
 };

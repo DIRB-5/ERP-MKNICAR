@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { KpiCard } from "@/components/KpiCard/KpiCard";
 import { Panel } from "@/components/Panel/Panel";
 import { BarChart } from "@/components/BarChart/BarChart";
@@ -103,7 +104,9 @@ const COLUMNAS_TECNICOS: readonly Columna<ProductividadTecnico>[] = [
     celda: (t) => (
       <span className={p.tecnico}>
         <span className={p.avatar} aria-hidden="true">{iniciales(t.nombre)}</span>
-        <span className={styles.celdaFuerte}>{t.nombre}</span>
+        <Link to={`/personal/tecnicos/${encodeURIComponent(t.id)}`} className={styles.celdaFuerte}>
+          {t.nombre}
+        </Link>
       </span>
     ),
   },

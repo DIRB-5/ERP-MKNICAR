@@ -162,3 +162,6 @@ export const useDashboardPersonal = (alcance: string, periodo: string) =>
     queryKey: ["personal", "dashboard", alcance, periodo],
     queryFn: () => personalRepo.dashboard(alcance, periodo),
   });
+
+export const usePerfilTecnico = (id: string) =>
+  useQuery({ queryKey: ["personal", "tecnico", id], queryFn: () => personalRepo.tecnico(id) });
