@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { TopNav } from "@/components/TopNav/TopNav";
 import { NAVEGACION, TALLERES } from "./navegacion";
 import { useConteoOrdenes } from "./useConteoOrdenes";
+import type { ContextoShell } from "./useTaller";
 import styles from "./AppShell.module.css";
 
 export function AppShell() {
@@ -29,7 +30,7 @@ export function AppShell() {
       />
       <main className={`${styles.contenido} scroll-y`}>
         <div className={styles.centro}>
-          <Outlet />
+          <Outlet context={{ taller, setTaller } satisfies ContextoShell} />
         </div>
       </main>
     </div>

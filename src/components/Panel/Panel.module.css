@@ -1,0 +1,53 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--space-4) var(--space-4) var(--space-4);
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.titulo {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.subtitulo {
+  margin-top: var(--space-0\.5);
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.accion {
+  flex: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cuerpo {
+  flex: 1;
+  min-width: 0;
+  margin-top: var(--space-4);
+}
+
+.alBorde {
+  padding: 0;
+}
+
+.alBorde .head {
+  padding: var(--space-4) var(--space-4) 0;
+}
+
+.alBorde .cuerpo {
+  display: flex;
+  flex-direction: column;
+}

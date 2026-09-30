@@ -1,0 +1,44 @@
+.lista {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--glass-border-ink);
+}
+
+.pestana {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: -1px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pestana:hover {
+  color: var(--ink);
+}
+
+.activa,
+.activa:hover {
+  color: var(--ink);
+  border-bottom-color: var(--brand);
+}
+
+.conteo {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--neutral-soft);
+  color: var(--ink-muted);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel {
+  padding-top: var(--space-4);
+}

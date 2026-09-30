@@ -1,0 +1,157 @@
+/* Piezas compartidas por los tableros de Dirección y Operación. */
+
+.vista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.encabezado {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.titulo {
+  margin: 0;
+  font-size: 1.1875rem;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.subtitulo {
+  margin: var(--space-1) 0 0;
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.tabs {
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: var(--space-0\.5);
+  border-radius: var(--radius-lg);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+}
+
+.tab {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-decoration: none;
+}
+
+.tab:hover { background: var(--nav-hover); color: var(--ink); }
+.tabActiva, .tabActiva:hover { background: var(--surface); color: var(--ink); }
+
+.acciones {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.boton {
+  height: 2rem;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.botonPrimario {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: var(--ink-inverse);
+}
+
+.boton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.seccionHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.seccionTitulo {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.seccionResumen {
+  font-size: 0.6875rem;
+  color: var(--ink-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.fila2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.fila3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+.filaKpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: var(--space-3); }
+
+@media (max-width: 900px) {
+  .fila2, .fila3 { grid-template-columns: 1fr; }
+}
+
+/* Pares etiqueta / cifra bajo un panel. */
+.metricas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.metricasEncabezado {
+  display: flex;
+  gap: var(--space-6);
+  text-align: right;
+}
+
+.etiqueta {
+  font-size: 0.625rem;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--ink-subtle);
+}
+
+.cifra {
+  margin-top: var(--space-1);
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.cifraCritica { color: var(--critical); }
+
+.cifraNota {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--ink-subtle);
+}
+
+.celdaFuerte { color: var(--ink); }
+.malo { color: var(--critical); }
+.pie {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+}

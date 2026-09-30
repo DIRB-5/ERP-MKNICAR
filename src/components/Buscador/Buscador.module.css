@@ -1,0 +1,62 @@
+.buscador {
+  position: relative;
+}
+
+.control {
+  width: 100%;
+  min-height: 2.25rem;
+  padding: var(--space-2) var(--space-8) var(--space-2) var(--space-3);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8125rem;
+}
+
+.control[aria-invalid="true"] { border-color: var(--critical); }
+
+.check {
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--success);
+  font-weight: 700;
+}
+
+.lista {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  right: 0;
+  top: calc(100% + var(--space-1));
+  max-height: 16rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-float);
+}
+
+.opcion {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.activa { background: var(--brand-soft); }
+
+.etiqueta { font-size: 0.8125rem; font-weight: 600; }
+.detalle { font-size: 0.6875rem; color: var(--ink-muted); }
+
+.nota {
+  padding: var(--space-2);
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}

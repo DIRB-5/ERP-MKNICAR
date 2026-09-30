@@ -59,6 +59,17 @@ para nada más:
 
 (`espera_refaccion` también cuenta como espera, responsable Abastecimiento.)
 
+## La unidad y el taller
+
+La unidad **no tiene campo de taller actual**. Tiene `tallerBaseId`, el taller
+que la atiende normalmente, y nada más. Dónde está ahora mismo sale de su O.S.
+abierta: si tiene una, está "En piso" en el taller de esa O.S.; si no, está
+"En operación" con el cliente.
+
+Cuando el taller de la O.S. no es el taller base, se marca siempre ("Fuera de
+base"), en la lista de unidades, en su ubicación y en el historial: esa unidad
+viajó o su base no tuvo capacidad, y eso le dice algo a Dirección.
+
 ## Vocabulario
 
 **O.S.** (orden de servicio), nunca O.T. ni "orden de trabajo".

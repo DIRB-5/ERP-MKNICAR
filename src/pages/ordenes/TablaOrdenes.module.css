@@ -1,0 +1,92 @@
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2) var(--space-3);
+  padding: 0 var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--ink-subtle);
+}
+
+/* Los campos son dato editable: siempre sólidos, nunca sobre vidrio. */
+.campo select,
+.campo input {
+  height: 1.875rem;
+  min-width: 8.5rem;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.campo input[type="search"] {
+  min-width: 10rem;
+}
+
+.limpiar {
+  height: 1.875rem;
+  padding: 0 var(--space-2);
+  border: none;
+  background: transparent;
+  color: var(--brand-mid);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secundario {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: var(--ink-subtle);
+}
+
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.pasos {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.pasos button {
+  height: 1.75rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pasos button:disabled {
+  color: var(--ink-subtle);
+  cursor: not-allowed;
+}

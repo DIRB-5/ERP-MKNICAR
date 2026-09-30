@@ -1,0 +1,121 @@
+.navegacion {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.navegacion button {
+  height: 1.75rem;
+  min-width: 1.75rem;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mes {
+  min-width: 9rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* La rejilla es dato: fondo sólido. */
+.calendario {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--border);
+  overflow: hidden;
+}
+
+.diaSemana {
+  padding: var(--space-2);
+  background: var(--surface-raised);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--ink-subtle);
+}
+
+.dia {
+  min-height: 6.5rem;
+  padding: var(--space-2);
+  background: var(--surface);
+  min-width: 0;
+}
+
+.fuera {
+  background: var(--surface-sunken);
+}
+
+.fuera .numero {
+  color: var(--ink-subtle);
+}
+
+.hoy {
+  box-shadow: inset 0 0 0 2px var(--brand-mid);
+}
+
+.hoy .numero {
+  color: var(--brand-mid);
+  font-weight: 700;
+}
+
+.numero {
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.entregas {
+  list-style: none;
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.entrega {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 var(--space-1);
+  padding: var(--space-1);
+  border-left: 3px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  background: var(--surface-raised);
+}
+
+.lista { border-left-color: var(--success); }
+.en_proceso { border-left-color: var(--brand-mid); }
+.en_riesgo { border-left-color: var(--critical); }
+.entregada { border-left-color: var(--border-strong); }
+
+.situacion {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.en_riesgo .situacion { color: var(--critical); }
+
+.cliente {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.625rem;
+  color: var(--ink-subtle);
+}

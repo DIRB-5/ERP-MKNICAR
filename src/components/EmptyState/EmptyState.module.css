@@ -1,0 +1,24 @@
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: 7.5rem;
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  border: 1px dashed var(--border-mid);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.titulo {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.detalle {
+  font-size: 0.6875rem;
+  color: var(--ink-subtle);
+}

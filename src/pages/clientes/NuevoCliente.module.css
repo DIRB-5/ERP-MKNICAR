@@ -1,0 +1,93 @@
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  /* Los formularios van centrados en la pantalla, no pegados a la izquierda. */
+  width: 100%;
+  max-width: 64rem;
+  margin-inline: auto;
+}
+
+.migas { font-size: 0.75rem; color: var(--ink-muted); }
+
+.titulo { margin: 0; font-size: 1.1875rem; font-weight: 600; letter-spacing: -0.2px; }
+.subtitulo { margin: var(--space-1) 0 0; font-size: 0.8125rem; color: var(--ink-muted); }
+
+.bloque {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+.bloqueTitulo { margin: 0; font-size: 0.9375rem; font-weight: 700; }
+.nota { margin: 0; font-size: 0.75rem; color: var(--ink-muted); }
+
+.rejilla2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+
+@media (max-width: 800px) {
+  .rejilla2 { grid-template-columns: 1fr; }
+}
+
+.contactos { display: flex; flex-direction: column; gap: var(--space-3); }
+
+/* Cada contacto es dato editable: tarjeta sólida. */
+.contacto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  min-width: 0;
+}
+
+/* Quien autoriza se distingue también por el borde, no solo por el chip. */
+.autoriza {
+  border-color: var(--brand-mid);
+  border-left-width: 3px;
+}
+
+.contactoTitulo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-1);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.contactoPie {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.canal { min-width: 10rem; }
+
+.casilla {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.casilla input { width: 1rem; height: 1rem; accent-color: var(--brand); }
+
+.pie {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+}
+
+.resumenErrores { margin-right: auto; font-size: 0.75rem; font-weight: 600; color: var(--critical); }

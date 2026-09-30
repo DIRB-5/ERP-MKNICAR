@@ -23,6 +23,8 @@ export interface DataTableProps<T> {
   compacta?: boolean;
   /** Estado vacío: dice qué falta y ofrece la acción que lo llena. */
   vacio?: ReactNode;
+  /** Sin superficie propia, para tablas que viven dentro de un `Panel`. */
+  plano?: boolean;
 }
 
 export function DataTable<T>({
@@ -33,56 +35,67 @@ export function DataTable<T>({
   onSeleccionar,
   compacta = false,
   vacio,
+  plano = false,
 }: DataTableProps<T>) {
   if (filas.length === 0 && vacio) {
-    return <Surface className={styles.vacio}>{vacio}</Surface>;
+    return plano ? (
+      <div className={styles.vacioPlano}>{vacio}</div>
+    ) : (
+      <Surface className={styles.vacio}>{vacio}</Surface>
+    );
   }
 
-  return (
+  const tabla = (
+    <div className={`${styles.scroll} scroll-x`}>
+      <table className={`${styles.tabla} ${compacta ? styles.compacta : ""}`}>
+        <thead>
+          <tr>
+            {columnas.map((c) => (
+              <th
+                key={c.id}
+                style={{ width: c.ancho }}
+                className={[c.numerica ? styles.der : "", c.fija ? styles.fija : ""]
+                  .filter(Boolean)
+                  .join(" ")}
+                scope="col"
+              >
+                {c.encabezado}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {filas.map((fila) => {
+            const clave = claveFila(fila);
+            return (
+              <tr
+                key={clave}
+                className={clave === filaSeleccionada ? styles.sel : undefined}
+                onClick={onSeleccionar ? () => onSeleccionar(fila) : undefined}
+              >
+                {columnas.map((c) => (
+                  <td
+                    key={c.id}
+                    className={[c.numerica ? styles.der : "", c.fija ? styles.fija : ""]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    {c.celda(fila)}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  return plano ? (
+    tabla
+  ) : (
     <Surface className={styles.wrap} elevacion="card">
-      <div className={`${styles.scroll} scroll-x`}>
-        <table className={`${styles.tabla} ${compacta ? styles.compacta : ""}`}>
-          <thead>
-            <tr>
-              {columnas.map((c) => (
-                <th
-                  key={c.id}
-                  style={{ width: c.ancho }}
-                  className={[c.numerica ? styles.der : "", c.fija ? styles.fija : ""]
-                    .filter(Boolean)
-                    .join(" ")}
-                  scope="col"
-                >
-                  {c.encabezado}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filas.map((fila) => {
-              const clave = claveFila(fila);
-              return (
-                <tr
-                  key={clave}
-                  className={clave === filaSeleccionada ? styles.sel : undefined}
-                  onClick={onSeleccionar ? () => onSeleccionar(fila) : undefined}
-                >
-                  {columnas.map((c) => (
-                    <td
-                      key={c.id}
-                      className={[c.numerica ? styles.der : "", c.fija ? styles.fija : ""]
-                        .filter(Boolean)
-                        .join(" ")}
-                    >
-                      {c.celda(fila)}
-                    </td>
-                  ))}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      {tabla}
     </Surface>
   );
 }

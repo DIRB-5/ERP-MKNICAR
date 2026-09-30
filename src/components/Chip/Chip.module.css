@@ -1,0 +1,15 @@
+.chip {
+  display: inline-block;
+  padding: var(--space-0\.5) var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.neutro { background: var(--neutral-soft); color: var(--ink-muted); }
+.brand { background: var(--brand-soft); color: var(--brand-mid); }
+.ok { background: var(--success-soft); color: var(--success); border-color: var(--success-border); }
+.critico { background: var(--critical-soft); color: var(--critical); border-color: var(--critical-border); }

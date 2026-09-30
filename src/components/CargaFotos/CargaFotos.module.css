@@ -1,0 +1,61 @@
+.fotos { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.rejilla {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--space-2);
+}
+
+.toma {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px dashed var(--border-mid);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.lista {
+  border-style: solid;
+  border-color: var(--success-border);
+  background: var(--success-soft);
+}
+
+.etiqueta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.etiqueta input,
+.extra input {
+  font: inherit;
+  font-size: 0.6875rem;
+  max-width: 100%;
+}
+
+.archivo {
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.extra {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--brand-mid);
+}
+
+.nota { margin: 0; font-size: 0.6875rem; color: var(--ink-muted); }
+.error { margin: 0; font-size: 0.6875rem; font-weight: 600; color: var(--critical); }

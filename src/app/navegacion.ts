@@ -5,7 +5,7 @@ import type { ItemNav } from "@/components/TopNav/TopNav";
  * deshabilitados: el usuario necesita saber que vienen.
  */
 export const NAVEGACION: readonly ItemNav[] = [
-  { etiqueta: "Dashboard", to: "/" },
+  { etiqueta: "Dashboard", to: "/", tambienEn: ["/operacion"] },
   { etiqueta: "Órdenes de Servicio", to: "/ordenes" },
   { etiqueta: "Cotizaciones", proximamente: true },
   { etiqueta: "Compras", proximamente: true },
@@ -13,7 +13,15 @@ export const NAVEGACION: readonly ItemNav[] = [
   { etiqueta: "Almacén", proximamente: true },
   { etiqueta: "Facturación", proximamente: true },
   { etiqueta: "Reportes", proximamente: true },
-  { etiqueta: "Catálogos", proximamente: true },
+  {
+    etiqueta: "Catálogos",
+    to: "/clientes",
+    tambienEn: ["/unidades"],
+    submenu: [
+      { etiqueta: "Clientes", to: "/clientes" },
+      { etiqueta: "Unidades", to: "/unidades" },
+    ],
+  },
   { etiqueta: "Administración", proximamente: true },
 ];
 

@@ -1,4 +1,5 @@
-import { NavLink } from "react-router-dom";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { NavLink, matchPath, useLocation } from "react-router-dom";
 import styles from "./TopNav.module.css";
 
 export interface ItemNav {
@@ -8,6 +9,69 @@ export interface ItemNav {
   proximamente?: boolean;
   /** Solo donde el número implique trabajo pendiente. */
   contador?: number;
+  /** Otras rutas que pertenecen a este módulo, p. ej. `/operacion` bajo Dashboard. */
+  tambienEn?: readonly string[];
+  /** Opciones que se despliegan al pasar el mouse o al llegar con el teclado. */
+  submenu?: readonly { etiqueta: string; to: string }[];
+}
+
+/**
+ * Desplegable de un item del menú. Se posiciona respecto al encabezado y no
+ * dentro de `.nav`, cuyo scroll horizontal lo recortaría. Cierra con un
+ * pequeño retraso para que el mouse cruce el hueco entre item y menú.
+ */
+function ConSubmenu({ item, children }: { item: ItemNav; children: ReactNode }) {
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const timer = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  const abrir = () => {
+    window.clearTimeout(timer.current);
+    const r = ref.current?.getBoundingClientRect();
+    if (r) setPos({ top: r.bottom + 4, left: r.left });
+  };
+  const cerrar = () => {
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setPos(null), 150);
+  };
+
+  return (
+    <div
+      ref={ref}
+      className={styles.conSubmenu}
+      onMouseEnter={abrir}
+      onMouseLeave={cerrar}
+      onFocus={abrir}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) cerrar();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          setPos(null);
+          ref.current?.querySelector("a")?.focus();
+        }
+      }}
+    >
+      {children}
+      {pos && (
+        <ul className={styles.submenu} style={{ top: pos.top, left: pos.left }} aria-label={item.etiqueta}>
+          {item.submenu?.map((s) => (
+            <li key={s.to}>
+              <NavLink
+                to={s.to}
+                className={({ isActive }) => `${styles.subitem} ${isActive ? styles.subitemActivo : ""}`}
+                onClick={() => setPos(null)}
+              >
+                {s.etiqueta}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 export interface TopNavProps {
@@ -39,10 +103,35 @@ export function TopNav({
   onCambiarPeriodo,
   onBuscar,
 }: TopNavProps) {
+  const { pathname } = useLocation();
+  const activoExtra = (it: ItemNav) =>
+    it.tambienEn?.some((ruta) => matchPath({ path: ruta, end: false }, pathname) != null) ?? false;
+
+  const enlace = (it: ItemNav, to: string) => (
+    <NavLink
+      key={it.etiqueta}
+      to={to}
+      end={to === "/"}
+      className={({ isActive }) => `${styles.item} ${isActive || activoExtra(it) ? styles.activo : ""}`}
+    >
+      {({ isActive: exacto }) => {
+        const isActive = exacto || activoExtra(it);
+        return (
+          <>
+            {/* Punto naranja: marca dónde estás. No es estado ni área. */}
+            {isActive && <span className={styles.punto} />}
+            <span className={styles.label}>{it.etiqueta}</span>
+            {it.contador != null && <span className={styles.contador}>{it.contador}</span>}
+          </>
+        );
+      }}
+    </NavLink>
+  );
+
   return (
     <header className={styles.header}>
       <div className={styles.fila1}>
-        <div className={styles.marca}>MKNICAR</div>
+        <img className={styles.marca} src="/mknicar-wordmark.png" alt="MKnicar" />
         <div className={styles.divisor} />
 
         <nav className={styles.nav} aria-label="Navegación principal">
@@ -56,26 +145,12 @@ export function TopNav({
                 {it.etiqueta}
                 <span className={styles.tooltip}>Próximamente</span>
               </span>
+            ) : it.submenu ? (
+              <ConSubmenu key={it.etiqueta} item={it}>
+                {enlace(it, it.to)}
+              </ConSubmenu>
             ) : (
-              <NavLink
-                key={it.etiqueta}
-                to={it.to}
-                end={it.to === "/"}
-                className={({ isActive }) =>
-                  `${styles.item} ${isActive ? styles.activo : ""}`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    {/* Punto naranja: marca dónde estás. No es estado ni área. */}
-                    {isActive && <span className={styles.punto} />}
-                    <span className={styles.label}>{it.etiqueta}</span>
-                    {it.contador != null && (
-                      <span className={styles.contador}>{it.contador}</span>
-                    )}
-                  </>
-                )}
-              </NavLink>
+              enlace(it, it.to)
             )
           )}
         </nav>

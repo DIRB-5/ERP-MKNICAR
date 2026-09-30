@@ -78,3 +78,7 @@
   color: var(--ink-muted);
   font-size: 0.75rem;
 }
+
+.vacioPlano {
+  padding: 0 var(--space-4) var(--space-4);
+}
