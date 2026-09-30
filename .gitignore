@@ -9,3 +9,6 @@ dist
 # generado desde design-system/tokens.json
 src/styles/tokens.css
 *.tsbuildinfo
+
+# configuración local de Claude Code
+.claude/
