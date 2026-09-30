@@ -4,7 +4,7 @@ import { Surface } from "@/components/Surface/Surface";
 import { Button } from "@/components/Button/Button";
 import { Aviso } from "@/components/Aviso/Aviso";
 import { Dialogo } from "@/components/Dialogo/Dialogo";
-import { useIngresoDirecto } from "@/data/consultas";
+import { useIngresoDirecto, useReceptores } from "@/data/consultas";
 import { useSesion } from "@/app/useSesion";
 import { useTallerPorDefecto } from "./ingreso/useTallerPorDefecto";
 import { FormAltaOS, aDatosAlta, altaInicial, revisarAlta } from "./ingreso/FormAltaOS";
@@ -22,9 +22,10 @@ export function Component() {
   const [recepcion, setRecepcion] = useState(recepcionInicial);
   const [intentado, setIntentado] = useState(false);
   const [confirmar, setConfirmar] = useState(false);
+  const { data: receptores = [] } = useReceptores(alta.tallerId);
 
   const rAlta = revisarAlta(alta, "directo");
-  const rRecepcion = revisarRecepcion(recepcion, alta.unidad?.unidad ?? null);
+  const rRecepcion = revisarRecepcion(recepcion, alta.unidad?.unidad ?? null, receptores);
   const numErrores = Object.keys(rAlta.errores).length + Object.keys(rRecepcion.errores).length;
   const advertencias = [...rAlta.advertencias, ...rRecepcion.advertencias];
 
@@ -32,7 +33,7 @@ export function Component() {
     const os = await ingresar.mutateAsync({
       alta: aDatosAlta(alta, "directo"),
       // Sin contexto de sesión todavía no hay id de asesor; el backend lo tomará del token.
-      recepcion: aDatosRecepcion(recepcion, sesion.usuarioId ?? ""),
+      recepcion: aDatosRecepcion(recepcion, sesion.usuarioId ?? "", receptores),
     });
     navigate(`/ordenes?vista=ingresos&recibida=${encodeURIComponent(os.folio)}`);
   };
@@ -73,6 +74,8 @@ export function Component() {
           onCambiar={setRecepcion}
           errores={intentado ? rRecepcion.errores : {}}
           unidad={alta.unidad?.unidad ?? null}
+          receptores={receptores}
+          tallerId={alta.tallerId}
         />
       </Surface>
 

@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/EmptyState/EmptyState";
 import { Estado } from "@/components/Estado/Estado";
 import { Folio } from "@/components/Folio/Folio";
 import { fechaHora } from "@/domain/format";
-import { useCliente, useIngreso, useRecibirOS } from "@/data/consultas";
+import { useCliente, useIngreso, useReceptores, useRecibirOS } from "@/data/consultas";
 import { useSesion } from "@/app/useSesion";
 import { FormRecepcion, aDatosRecepcion, recepcionInicial, revisarRecepcion } from "./ingreso/FormRecepcion";
 import { PRIORIDAD, TIPO_INGRESO, TIPO_SERVICIO } from "./ingreso/etiquetas";
@@ -21,6 +21,7 @@ export function Component() {
   const { data: ingreso, isPending } = useIngreso(folio);
   const { data: cliente } = useCliente(ingreso?.cliente.id ?? "");
   const recibir = useRecibirOS();
+  const { data: receptores = [] } = useReceptores(ingreso?.orden.tallerId ?? "");
 
   const [estado, setEstado] = useState(recepcionInicial);
   const [intentado, setIntentado] = useState(false);
@@ -57,14 +58,14 @@ export function Component() {
     );
   }
 
-  const revision = revisarRecepcion(estado, unidad);
+  const revision = revisarRecepcion(estado, unidad, receptores);
   const errores = intentado ? revision.errores : {};
   const numErrores = Object.keys(revision.errores).length;
   const suspendido = cliente?.estado === "credito_suspendido";
 
   const guardar = async () => {
     // Sin contexto de sesión todavía no hay id de asesor; el backend lo tomará del token.
-    await recibir.mutateAsync({ folio: orden.folio, datos: aDatosRecepcion(estado, sesion.usuarioId ?? "") });
+    await recibir.mutateAsync({ folio: orden.folio, datos: aDatosRecepcion(estado, sesion.usuarioId ?? "", receptores) });
     navigate(`/ordenes?vista=ingresos&recibida=${encodeURIComponent(orden.folio)}`);
   };
 
@@ -126,7 +127,14 @@ export function Component() {
       {suspendido && <Aviso tono="critico" titulo={`${ingreso.cliente.razonSocial} tiene el crédito suspendido`} />}
 
       <Surface className={f.bloque}>
-        <FormRecepcion estado={estado} onCambiar={setEstado} errores={errores} unidad={unidad} />
+        <FormRecepcion
+          estado={estado}
+          onCambiar={setEstado}
+          errores={errores}
+          unidad={unidad}
+          receptores={receptores}
+          tallerId={orden.tallerId}
+        />
       </Surface>
 
       {revision.advertencias.length > 0 && (

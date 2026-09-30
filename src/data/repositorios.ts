@@ -22,6 +22,7 @@ import type {
   OrdenHistorial,
   OrdenServicio,
   PerfilTecnico,
+  PersonaReceptora,
   Producto,
   Proveedor,
   SaldoProveedor,
@@ -126,4 +127,6 @@ export interface CatalogoRepo {
 export interface PersonalRepo {
   dashboard(alcance: string, periodo: string): Promise<DashboardPersonal>;
   tecnico(id: string): Promise<PerfilTecnico | null>;
+  /** Quiénes pueden recibir unidades en ese taller. */
+  receptores(tallerId: string): Promise<PersonaReceptora[]>;
 }

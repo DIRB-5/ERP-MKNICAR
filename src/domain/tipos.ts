@@ -215,6 +215,8 @@ export interface RecepcionUnidad {
   recibeId: string;
   entregaNombre: string;
   inventario: Record<ElementoInventario, boolean>;
+  /** Lo que llega con la unidad y no está en la lista: herramienta especial, accesorios, equipo del cliente. */
+  inventarioExtra: string;
   objetosPersonales: string;
   danosPrevios: DanoPrevio[];
   fotos: FotoRecepcion[];
@@ -691,4 +693,11 @@ export interface PerfilTecnico {
    */
   expediente: { etiqueta: string; valor: string }[] | null;
   ordenesRecientes: OrdenTecnico[];
+}
+
+/** Persona con facultad de recibir unidades en un taller. La facultad la asigna RRHH. */
+export interface PersonaReceptora {
+  id: string;
+  nombre: string;
+  puesto: string;
 }

@@ -109,6 +109,12 @@
   font-weight: 600;
 }
 
+.inventarioExtra {
+  grid-column: 1 / -1;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+}
+
 .subtituloCampo { font-size: 0.75rem; font-weight: 600; }
 
 /* Ficha de solo lectura con lo ya capturado en el alta. */

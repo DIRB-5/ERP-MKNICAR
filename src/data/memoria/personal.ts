@@ -23,4 +23,7 @@ export const personalRepoMemoria: PersonalRepo = {
   async tecnico() {
     return null;
   },
+  async receptores() {
+    return [];
+  },
 };
