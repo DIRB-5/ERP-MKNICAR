@@ -33,3 +33,6 @@ export const USO_CFDI: Record<string, string> = {
   G03: "Gastos en general",
   I08: "Otra maquinaria y equipo",
 };
+
+/** Tasa general del IVA. La frontera norte y sur tiene estímulo; lo resolverá el backend por taller. */
+export const TASA_IVA = 0.16;

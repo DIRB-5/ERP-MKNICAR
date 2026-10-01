@@ -731,3 +731,75 @@ export interface DatosAltaTecnico {
   curp: string | null;
   nss: string | null;
 }
+
+/** Evaluación de habilidades de un técnico. El nivel se deriva del puntaje. */
+export interface DatosEvaluacion {
+  /** AAAA-MM-DD. */
+  fecha: string;
+  evaluador: string;
+  habilidades: { nombre: string; valor: number }[];
+  observaciones: string;
+  /** Horas de capacitación sugeridas para cerrar las brechas; 0 si no hay. */
+  horasCapacitacion: number;
+}
+
+/* ── Compras: comparativo de cotizaciones ─────────────────────────── */
+
+export interface ProveedorInvitado {
+  proveedor: { id: string; nombre: string };
+  /** Cuándo respondió, ISO 8601; null si todavía no cotiza. */
+  respondio: string | null;
+  entregaDias: number | null;
+  creditoDias: number | null;
+}
+
+export interface Oferta {
+  proveedorId: string;
+  precioUnitario: number;
+  disponibilidad: Disponibilidad;
+  /** Días para surtir cuando no es inmediata. */
+  diasEntrega: number | null;
+}
+
+export interface ConceptoRequisicion {
+  id: string;
+  descripcion: string;
+  /** Sistema del vehículo: suspensión, frenos… */
+  sistema: string;
+  numeroParte: string;
+  cantidad: number;
+  /** Último costo de compra; null si nunca se ha comprado. */
+  ultimoCosto: number | null;
+  /** Una por proveedor que cotizó este concepto. */
+  ofertas: Oferta[];
+}
+
+export interface ComparativoCotizacion {
+  /** Folio de la requisición. */
+  folio: string;
+  estado: string;
+  folioOs: string;
+  servicio: string;
+  unidad: { placas: string; marca: string; modelo: string };
+  cliente: string;
+  taller: string;
+  /** AAAA-MM-DD. */
+  solicitada: string;
+  /** Presupuesto estimado cuando se levantó la requisición. */
+  estimadoInicial: number;
+  proveedores: ProveedorInvitado[];
+  conceptos: ConceptoRequisicion[];
+}
+
+export interface RequisicionEnComparativo {
+  folio: string;
+  folioOs: string;
+  cliente: string;
+  placas: string;
+  taller: string;
+  conceptos: number;
+  respuestas: number;
+  invitados: number;
+  solicitada: string;
+  estimadoInicial: number;
+}

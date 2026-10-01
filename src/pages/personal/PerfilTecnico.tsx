@@ -15,19 +15,18 @@ import type { CertificacionTecnico, NivelHabilidad, OrdenTecnico } from "@/domai
 import { usePerfilTecnico } from "@/data/consultas";
 import { diasEntre, fechaLocal } from "@/app/fechas";
 import { nombreMes } from "@/pages/tesoreria/formato";
+import { NIVEL_LABEL, UMBRAL_BRECHA } from "@/app/habilidades";
 import styles from "@/pages/tableros/Tableros.module.css";
 import p from "./Personal.module.css";
 
 /** Con menos de estos días para vencer, la certificación se marca. Propuesta: confirmar con RRHH. */
 const DIAS_AVISO_CERTIFICACION = 60;
-/** Por debajo de este puntaje, la habilidad es una brecha que limita asignaciones. */
-const UMBRAL_BRECHA = 60;
 
-const NIVEL: Record<NivelHabilidad, { label: string; tono: TonoChip }> = {
-  experto: { label: "Experto", tono: "brand" },
-  avanzado: { label: "Avanzado", tono: "brand" },
-  intermedio: { label: "Intermedio", tono: "neutro" },
-  basico: { label: "Básico", tono: "neutro" },
+const TONO_NIVEL: Record<NivelHabilidad, TonoChip> = {
+  experto: "brand",
+  avanzado: "brand",
+  intermedio: "neutro",
+  basico: "neutro",
 };
 
 type EstadoCert = { label: string; tono: TonoChip; dias: number | null };
@@ -186,6 +185,7 @@ export function Component() {
         <Panel
           titulo="Habilidades evaluadas"
           subtitulo={t?.ultimaEvaluacion ? `Últ. evaluación: ${fecha(fechaLocal(t.ultimaEvaluacion), { anio: true })}` : "Sin evaluación"}
+          accion={t ? { etiqueta: t.ultimaEvaluacion ? "Nueva evaluación" : "Evaluar habilidades", to: `/personal/tecnicos/${encodeURIComponent(t.id)}/evaluacion` } : undefined}
         >
           {t && t.habilidades.length > 0 ? (
             <ul className={p.habilidades}>
@@ -193,7 +193,7 @@ export function Component() {
                 <li key={h.nombre}>
                   <div className={p.habilidadHead}>
                     <span>{h.nombre}</span>
-                    <Chip tono={NIVEL[h.nivel].tono}>{NIVEL[h.nivel].label}</Chip>
+                    <Chip tono={TONO_NIVEL[h.nivel]}>{NIVEL_LABEL[h.nivel]}</Chip>
                     <b>{numero(h.valor)}</b>
                   </div>
                   <div className={p.pista}>

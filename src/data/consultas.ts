@@ -5,11 +5,20 @@ import type {
   DatosAltaProducto,
   DatosAltaProveedor,
   DatosAltaTecnico,
+  DatosEvaluacion,
   DatosAltaRapidaUnidad,
   DatosAltaUnidad,
   DatosRecepcion,
 } from "@/domain/tipos";
-import { catalogoRepo, clienteRepo, ordenServicioRepo, personalRepo, tesoreriaRepo, unidadRepo } from "./index";
+import {
+  catalogoRepo,
+  clienteRepo,
+  compraRepo,
+  ordenServicioRepo,
+  personalRepo,
+  tesoreriaRepo,
+  unidadRepo,
+} from "./index";
 import type { FiltrosClientes, FiltrosProductos, FiltrosProveedores, FiltrosUnidades } from "./repositorios";
 
 export const useClientes = (f: FiltrosClientes) =>
@@ -181,3 +190,19 @@ export function useCrearTecnico() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["personal"] }),
   });
 }
+
+export function useRegistrarEvaluacion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { tecnicoId: string; datos: DatosEvaluacion }) => personalRepo.registrarEvaluacion(v.tecnicoId, v.datos),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["personal"] }),
+  });
+}
+
+/* ── Compras ─────────────────────────────────────────────────────── */
+
+export const useComparativos = (alcance: string) =>
+  useQuery({ queryKey: ["compras", "comparativos", alcance], queryFn: () => compraRepo.comparativos(alcance) });
+
+export const useComparativo = (folio: string) =>
+  useQuery({ queryKey: ["compras", "comparativo", folio], queryFn: () => compraRepo.comparativo(folio) });

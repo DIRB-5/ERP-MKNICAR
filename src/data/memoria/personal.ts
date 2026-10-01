@@ -6,6 +6,7 @@
  * fuera de la fase 1: lo que se da de alta en la sesión vive aquí hasta recargar.
  */
 import type { DatosAltaTecnico, PerfilTecnico } from "@/domain/tipos";
+import { nivelPorPuntaje } from "@/app/habilidades";
 import type { PersonalRepo } from "../repositorios";
 
 const altas: { datos: DatosAltaTecnico; perfil: PerfilTecnico }[] = [];
@@ -97,5 +98,26 @@ export const personalRepoMemoria: PersonalRepo = {
     };
     altas.push({ datos: d, perfil });
     return { id: perfil.id };
+  },
+
+  async registrarEvaluacion(tecnicoId, d) {
+    const alta = altas.find((a) => a.perfil.id === tecnicoId);
+    if (!alta) throw new Error("El técnico ya no existe.");
+    const perfil = alta.perfil;
+    perfil.ultimaEvaluacion = d.fecha;
+    perfil.habilidades = d.habilidades.map((h) => ({
+      nombre: h.nombre,
+      valor: h.valor,
+      nivel: nivelPorPuntaje(h.valor),
+      promedioTaller: 0,
+    }));
+    // El promedio del taller se recalcula para todos los técnicos del mismo taller.
+    const delTaller = altas.filter((a) => a.perfil.taller.id === perfil.taller.id).map((a) => a.perfil);
+    for (const t of delTaller) {
+      t.habilidades = t.habilidades.map((h) => {
+        const valores = delTaller.flatMap((x) => x.habilidades.filter((y) => y.nombre === h.nombre).map((y) => y.valor));
+        return { ...h, promedioTaller: Math.round(valores.reduce((a, v) => a + v, 0) / valores.length) };
+      });
+    }
   },
 };

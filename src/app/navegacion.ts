@@ -8,7 +8,12 @@ export const NAVEGACION: readonly ItemNav[] = [
   { etiqueta: "Dashboard", to: "/", tambienEn: ["/operacion"] },
   { etiqueta: "Órdenes de Servicio", to: "/ordenes" },
   { etiqueta: "Cotizaciones", proximamente: true },
-  { etiqueta: "Compras", proximamente: true },
+  {
+    etiqueta: "Compras",
+    to: "/compras/comparativos",
+    tambienEn: ["/requisiciones"],
+    submenu: [{ etiqueta: "Comparativo de cotizaciones", to: "/compras/comparativos" }],
+  },
   {
     etiqueta: "Tesorería",
     to: "/tesoreria",

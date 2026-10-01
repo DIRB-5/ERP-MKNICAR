@@ -2,6 +2,7 @@ import type {
   CategoriaProducto,
   Cliente,
   ClienteResumen,
+  ComparativoCotizacion,
   CuentasPorCobrar,
   DashboardFinanciero,
   DashboardPersonal,
@@ -12,6 +13,7 @@ import type {
   DatosAltaRapidaUnidad,
   DatosAltaTecnico,
   DatosAltaUnidad,
+  DatosEvaluacion,
   DatosRecepcion,
   DetalleProducto,
   DetalleProveedor,
@@ -26,6 +28,7 @@ import type {
   PersonaReceptora,
   Producto,
   Proveedor,
+  RequisicionEnComparativo,
   SaldoProveedor,
   Subcategoria,
   TipoCliente,
@@ -132,4 +135,15 @@ export interface PersonalRepo {
   receptores(tallerId: string): Promise<PersonaReceptora[]>;
   /** Rechaza un número de empleado que ya exista. Devuelve el id del técnico. */
   crearTecnico(datos: DatosAltaTecnico): Promise<{ id: string }>;
+  /** Reemplaza las habilidades del técnico con las de esta evaluación. */
+  registrarEvaluacion(tecnicoId: string, datos: DatosEvaluacion): Promise<void>;
+}
+
+/**
+ * Compras. Generar O.C. o el presupuesto al cliente son transiciones que
+ * autoriza el backend; aquí solo se lee el comparativo.
+ */
+export interface CompraRepo {
+  comparativos(alcance: string): Promise<RequisicionEnComparativo[]>;
+  comparativo(folio: string): Promise<ComparativoCotizacion | null>;
 }
