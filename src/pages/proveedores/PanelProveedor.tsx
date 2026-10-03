@@ -21,6 +21,18 @@ export function PanelProveedor({ id, onCerrar }: { id: string; onCerrar: () => v
   }
 
   const p = d.proveedor;
+  const b = d.datosBancarios;
+  const bancarios = [
+    { etiqueta: "Depositar a", valor: b.beneficiario, ancho: true },
+    { etiqueta: "Banco", valor: b.banco },
+    { etiqueta: "Cuenta", valor: b.cuenta },
+    { etiqueta: "CLABE", valor: b.clabe },
+    { etiqueta: "Tarjeta", valor: b.tarjeta },
+    { etiqueta: "Convenio", valor: b.convenio },
+    { etiqueta: "Referencia", valor: b.referencia },
+    { etiqueta: "Solicita", valor: b.solicita },
+    { etiqueta: "Comentarios", valor: b.comentarios, ancho: true },
+  ].filter((x) => x.valor !== "");
   return (
     <>
       <header className={s.panelHead}>
@@ -60,6 +72,23 @@ export function PanelProveedor({ id, onCerrar }: { id: string; onCerrar: () => v
             <dd>{d.domicilioFiscal}</dd>
           </div>
         </dl>
+      </section>
+
+      <section className={s.bloque} aria-labelledby="bancarios">
+        <h3 id="bancarios" className={s.bloqueTitulo}>Datos bancarios</h3>
+        <dl className={s.datos}>
+          <div className={s.ancho}>
+            <dt>Condición de pago</dt>
+            <dd>{p.creditoDias === 0 ? "Contado" : `Crédito a ${numero(p.creditoDias)} días`}</dd>
+          </div>
+          {bancarios.map((x) => (
+            <div key={x.etiqueta} className={x.ancho ? s.ancho : undefined}>
+              <dt>{x.etiqueta}</dt>
+              <dd>{x.valor}</dd>
+            </div>
+          ))}
+        </dl>
+        {bancarios.length === 0 && <p className={s.nota}>Sin datos bancarios registrados.</p>}
       </section>
 
       <section className={s.bloque} aria-labelledby="contactos">
@@ -114,7 +143,7 @@ export function PanelProveedor({ id, onCerrar }: { id: string; onCerrar: () => v
       </section>
 
       <p className={s.nota}>
-        {numero(p.productos)} productos en catálogo · crédito {numero(p.creditoDias)} días
+        {numero(p.productos)} productos en catálogo
       </p>
     </>
   );

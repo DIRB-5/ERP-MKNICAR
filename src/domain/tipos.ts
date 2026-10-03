@@ -493,8 +493,29 @@ export interface ContactoProveedor {
   correo: string;
 }
 
+/**
+ * A dónde le deposita Tesorería. Todo es opcional en el alta: cadena vacía
+ * significa "aún no se tiene". Un proveedor cobra por transferencia (cuenta o
+ * CLABE), a tarjeta, o por convenio con referencia; rara vez por las tres.
+ */
+export interface DatosBancariosProveedor {
+  /** "Depositar a": titular de la cuenta, que puede no ser la razón social. */
+  beneficiario: string;
+  banco: string;
+  cuenta: string;
+  /** CLABE interbancaria, 18 dígitos. */
+  clabe: string;
+  tarjeta: string;
+  /** Número de convenio para pago de servicios (p. ej. CIE). */
+  convenio: string;
+  referencia: string;
+  solicita: string;
+  comentarios: string;
+}
+
 export interface DetalleProveedor {
   proveedor: Proveedor;
+  datosBancarios: DatosBancariosProveedor;
   regimenFiscal: string;
   usoCfdi: string;
   domicilioFiscal: string;
@@ -515,9 +536,9 @@ export interface DatosAltaProveedor {
   codigoPostal: string;
   domicilioFiscal: string;
   categoriaIds: string[];
+  /** 0 = contado. */
   creditoDias: number;
-  /** CLABE interbancaria para transferencias de Tesorería; null si aún no se tiene. */
-  clabe: string | null;
+  datosBancarios: DatosBancariosProveedor;
   contactos: ContactoProveedor[];
 }
 

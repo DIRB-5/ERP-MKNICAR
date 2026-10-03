@@ -72,6 +72,7 @@ export const catalogoRepoMemoria: CatalogoRepo = {
       regimenFiscal: `${d.regimenFiscal} · ${REGIMEN_FISCAL[d.regimenFiscal] ?? ""}`,
       usoCfdi: `${d.usoCfdi} · ${USO_CFDI[d.usoCfdi] ?? ""}`,
       domicilioFiscal: `${d.domicilioFiscal}, C.P. ${d.codigoPostal}`,
+      datosBancarios: d.datosBancarios,
       contactos: d.contactos,
       devoluciones: 0,
       ordenes: [],

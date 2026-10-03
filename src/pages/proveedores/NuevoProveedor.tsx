@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Surface } from "@/components/Surface/Surface";
-import { Campo, Input, Select, SoloLectura } from "@/components/Campo/Campo";
+import { Campo, Input, Select, SoloLectura, Textarea } from "@/components/Campo/Campo";
 import { Button } from "@/components/Button/Button";
 import { Aviso } from "@/components/Aviso/Aviso";
-import type { ContactoProveedor, DatosAltaProveedor } from "@/domain/tipos";
+import type { ContactoProveedor, DatosAltaProveedor, DatosBancariosProveedor } from "@/domain/tipos";
 import { useCategorias, useCrearProveedor } from "@/data/consultas";
 import { REGIMEN_FISCAL, USO_CFDI } from "@/app/sat";
 import {
@@ -30,12 +30,13 @@ interface Estado {
   codigoPostal: string;
   domicilioFiscal: string;
   categoriaIds: string[];
+  condicion: "credito" | "contado";
   creditoDias: string;
-  clabe: string;
+  bancarios: DatosBancariosProveedor;
   contactos: ContactoEditable[];
 }
 
-type CampoProveedor = "razonSocial" | "rfc" | "regimenFiscal" | "codigoPostal" | "domicilioFiscal" | "creditoDias" | "clabe";
+type CampoProveedor = "razonSocial" | "rfc" | "regimenFiscal" | "codigoPostal" | "domicilioFiscal" | "creditoDias" | "cuenta" | "clabe" | "tarjeta";
 type ErroresContacto = Partial<Record<"nombre" | "telefono" | "correo", string>>;
 
 const contactoVacio = (): ContactoEditable => ({ clave: crypto.randomUUID(), nombre: "", puesto: "", telefono: "", correo: "" });
@@ -52,12 +53,15 @@ function revisar(e: Estado) {
   if (!codigoPostalValido(e.codigoPostal)) errores.codigoPostal = "El código postal tiene 5 dígitos.";
   if (!e.domicilioFiscal.trim()) errores.domicilioFiscal = "Captura el domicilio fiscal.";
   const credito = Number(e.creditoDias);
-  if (e.creditoDias.trim() === "" || !Number.isInteger(credito) || credito < 0 || credito > 365) {
-    errores.creditoDias = "Días de crédito entre 0 (contado) y 365.";
+  if (e.condicion === "credito" && (e.creditoDias.trim() === "" || !Number.isInteger(credito) || credito < 1 || credito > 365)) {
+    errores.creditoDias = "Días de crédito entre 1 y 365.";
   }
-  if (e.clabe.trim() && !clabeValida(e.clabe)) {
+  const b = e.bancarios;
+  if (b.cuenta && b.cuenta.length < 7) errores.cuenta = "La cuenta tiene entre 7 y 11 dígitos.";
+  if (b.clabe && !clabeValida(b.clabe)) {
     errores.clabe = "La CLABE no es válida: son 18 dígitos y el último es verificador.";
   }
+  if (b.tarjeta && b.tarjeta.length !== 16) errores.tarjeta = "La tarjeta tiene 16 dígitos.";
 
   const capturados = e.contactos.filter((c) => !vacio(c));
   for (const c of capturados) {
@@ -82,8 +86,18 @@ function aDatos(e: Estado, capturados: ContactoEditable[]): DatosAltaProveedor {
     codigoPostal: e.codigoPostal.trim(),
     domicilioFiscal: e.domicilioFiscal.trim(),
     categoriaIds: e.categoriaIds,
-    creditoDias: Number(e.creditoDias),
-    clabe: e.clabe.replace(/\s/g, "") || null,
+    creditoDias: e.condicion === "contado" ? 0 : Number(e.creditoDias),
+    datosBancarios: {
+      beneficiario: e.bancarios.beneficiario.trim(),
+      banco: e.bancarios.banco.trim(),
+      cuenta: e.bancarios.cuenta,
+      clabe: e.bancarios.clabe,
+      tarjeta: e.bancarios.tarjeta,
+      convenio: e.bancarios.convenio.trim(),
+      referencia: e.bancarios.referencia.trim(),
+      solicita: e.bancarios.solicita.trim(),
+      comentarios: e.bancarios.comentarios.trim(),
+    },
     contactos: capturados.map(({ clave: _clave, ...c }) => ({
       nombre: c.nombre.trim(),
       puesto: c.puesto.trim(),
@@ -107,8 +121,9 @@ export function Component() {
     codigoPostal: "",
     domicilioFiscal: "",
     categoriaIds: [],
+    condicion: "credito",
     creditoDias: "30",
-    clabe: "",
+    bancarios: { beneficiario: "", banco: "", cuenta: "", clabe: "", tarjeta: "", convenio: "", referencia: "", solicita: "", comentarios: "" },
     contactos: [contactoVacio()],
   }));
   const [intentado, setIntentado] = useState(false);
@@ -117,6 +132,8 @@ export function Component() {
   const errores = intentado ? r.errores : {};
   const erroresContacto = intentado ? r.erroresContacto : {};
   const set = <K extends keyof Estado>(k: K, v: Estado[K]) => setEstado({ ...estado, [k]: v });
+  const ponerBanco = (cambio: Partial<DatosBancariosProveedor>) => set("bancarios", { ...estado.bancarios, ...cambio });
+  const soloDigitos = (v: string) => v.replace(/\D/g, "");
   const ponerContacto = (clave: string, cambio: Partial<ContactoEditable>) =>
     set("contactos", estado.contactos.map((c) => (c.clave === clave ? { ...c, ...cambio } : c)));
 
@@ -128,6 +145,7 @@ export function Component() {
   };
 
   const credito = Number(estado.creditoDias);
+  const b = estado.bancarios;
 
   return (
     <form
@@ -194,21 +212,28 @@ export function Component() {
       <Surface as="section" aria-labelledby="sec-comercial" className={f.bloque}>
         <h2 id="sec-comercial" className={f.bloqueTitulo}>Condiciones comerciales</h2>
         <div className={f.rejilla3}>
-          <Campo
-            etiqueta="Días de crédito"
-            obligatorio
-            error={errores.creditoDias}
-            ayuda={!errores.creditoDias && estado.creditoDias.trim() !== "" ? (credito === 0 ? "Contado." : `Paga a ${credito} días de la factura.`) : undefined}
-          >
+          <Campo etiqueta="Crédito o contado" obligatorio>
             {(p) => (
-              <Input {...p} inputMode="numeric" maxLength={3} value={estado.creditoDias} onChange={(x) => set("creditoDias", x.target.value.replace(/\D/g, ""))} />
+              <Select {...p} value={estado.condicion} onChange={(x) => set("condicion", x.target.value === "contado" ? "contado" : "credito")}>
+                <option value="credito">Crédito</option>
+                <option value="contado">Contado</option>
+              </Select>
             )}
           </Campo>
-          <Campo etiqueta="CLABE interbancaria" error={errores.clabe} ayuda="Opcional ahora; Tesorería la necesita para pagarle.">
-            {(p) => (
-              <Input {...p} inputMode="numeric" maxLength={18} value={estado.clabe} onChange={(x) => set("clabe", x.target.value.replace(/\D/g, ""))} />
-            )}
-          </Campo>
+          {estado.condicion === "credito" ? (
+            <Campo
+              etiqueta="Días de crédito"
+              obligatorio
+              error={errores.creditoDias}
+              ayuda={!errores.creditoDias && estado.creditoDias.trim() !== "" ? `Paga a ${credito} días de la factura.` : undefined}
+            >
+              {(p) => (
+                <Input {...p} inputMode="numeric" maxLength={3} value={estado.creditoDias} onChange={(x) => set("creditoDias", soloDigitos(x.target.value))} />
+              )}
+            </Campo>
+          ) : (
+            <SoloLectura etiqueta="Días de crédito">Se paga al recibir la factura</SoloLectura>
+          )}
           <SoloLectura etiqueta="Estado">Activo</SoloLectura>
         </div>
 
@@ -240,6 +265,44 @@ export function Component() {
             </div>
           )}
         </fieldset>
+      </Surface>
+
+      <Surface as="section" aria-labelledby="sec-bancarios" className={f.bloque}>
+        <h2 id="sec-bancarios" className={f.bloqueTitulo}>Datos bancarios</h2>
+        <p className={s.nota}>Opcionales ahora; Tesorería los necesita para pagarle.</p>
+        <div className={f.rejilla2}>
+          <Campo etiqueta="Depositar a" ayuda="Titular de la cuenta, si no es la razón social.">
+            {(p) => <Input {...p} autoComplete="off" value={b.beneficiario} onChange={(x) => ponerBanco({ beneficiario: x.target.value })} />}
+          </Campo>
+          <Campo etiqueta="Banco">
+            {(p) => <Input {...p} autoComplete="off" value={b.banco} onChange={(x) => ponerBanco({ banco: x.target.value })} />}
+          </Campo>
+        </div>
+        <div className={f.rejilla3}>
+          <Campo etiqueta="Cuenta" error={errores.cuenta}>
+            {(p) => <Input {...p} inputMode="numeric" autoComplete="off" maxLength={11} value={b.cuenta} onChange={(x) => ponerBanco({ cuenta: soloDigitos(x.target.value) })} />}
+          </Campo>
+          <Campo etiqueta="CLABE" error={errores.clabe} ayuda="18 dígitos.">
+            {(p) => <Input {...p} inputMode="numeric" autoComplete="off" maxLength={18} value={b.clabe} onChange={(x) => ponerBanco({ clabe: soloDigitos(x.target.value) })} />}
+          </Campo>
+          <Campo etiqueta="Tarjeta" error={errores.tarjeta} ayuda="16 dígitos, para depósito a tarjeta.">
+            {(p) => <Input {...p} inputMode="numeric" autoComplete="off" maxLength={16} value={b.tarjeta} onChange={(x) => ponerBanco({ tarjeta: soloDigitos(x.target.value) })} />}
+          </Campo>
+        </div>
+        <div className={f.rejilla3}>
+          <Campo etiqueta="Convenio">
+            {(p) => <Input {...p} autoComplete="off" maxLength={20} value={b.convenio} onChange={(x) => ponerBanco({ convenio: x.target.value })} />}
+          </Campo>
+          <Campo etiqueta="Referencia">
+            {(p) => <Input {...p} autoComplete="off" maxLength={40} value={b.referencia} onChange={(x) => ponerBanco({ referencia: x.target.value })} />}
+          </Campo>
+          <Campo etiqueta="Solicita">
+            {(p) => <Input {...p} autoComplete="off" value={b.solicita} onChange={(x) => ponerBanco({ solicita: x.target.value })} />}
+          </Campo>
+        </div>
+        <Campo etiqueta="Comentarios">
+          {(p) => <Textarea {...p} rows={3} value={b.comentarios} onChange={(x) => ponerBanco({ comentarios: x.target.value })} />}
+        </Campo>
       </Surface>
 
       <Surface as="section" aria-labelledby="sec-contactos" className={f.bloque}>
