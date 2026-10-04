@@ -1,0 +1,23 @@
+.celda {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+/* Control de dato editable: sólido, nunca sobre vidrio. */
+.selector {
+  height: 1.625rem;
+  width: 12rem;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--brand-mid);
+  font: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.selector:hover { border-color: var(--border-strong); }

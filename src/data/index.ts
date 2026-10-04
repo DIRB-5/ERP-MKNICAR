@@ -32,6 +32,7 @@ export type {
   CatalogoRepo,
   PersonalRepo,
   CompraRepo,
+  FiltrosActivas,
   FiltrosClientes,
   FiltrosProductos,
   FiltrosProveedores,

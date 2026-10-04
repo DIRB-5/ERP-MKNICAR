@@ -1,13 +1,16 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { SegmentedControl } from "@/components/SegmentedControl/SegmentedControl";
 import { ColaIngresos } from "./Recepcion";
+import { OrdenesActivas } from "./OrdenesActivas";
 import { KanbanOrdenes } from "./KanbanOrdenes";
 import { TablaOrdenes } from "./TablaOrdenes";
 import { CalendarioEntregas } from "./CalendarioEntregas";
 import styles from "./Ordenes.module.css";
 
-// "Ingresos de hoy" es la vista por defecto; más adelante dependerá del rol.
+// "Activas" es la vista por defecto: ahí se da seguimiento y se mueve cada O.S.
+// Más adelante la vista inicial dependerá del rol (recepción abriría en Ingresos).
 const VISTAS = [
+  { id: "activas", etiqueta: "Activas" },
   { id: "ingresos", etiqueta: "Ingresos de hoy" },
   { id: "kanban", etiqueta: "Kanban" },
   { id: "tabla", etiqueta: "Tabla" },
@@ -23,7 +26,7 @@ export function Component() {
   const [params, setParams] = useSearchParams();
   const crudo = params.get("vista");
   // "tablero" fue su nombre un tiempo: los enlaces viejos siguen sirviendo.
-  const vista: Vista = crudo === "tablero" ? "kanban" : esVista(crudo) ? crudo : "ingresos";
+  const vista: Vista = crudo === "tablero" ? "kanban" : esVista(crudo) ? crudo : "activas";
 
   const cambiarVista = (v: Vista) => {
     const siguiente = new URLSearchParams(params);
@@ -42,6 +45,7 @@ export function Component() {
           + Crear O.S.
         </Link>
       </header>
+      {vista === "activas" && <OrdenesActivas />}
       {vista === "ingresos" && <ColaIngresos />}
       {vista === "kanban" && <KanbanOrdenes />}
       {vista === "tabla" && <TablaOrdenes />}

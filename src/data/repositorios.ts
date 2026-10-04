@@ -15,6 +15,7 @@ import type {
   DatosAltaUnidad,
   DatosEvaluacion,
   DatosRecepcion,
+  DetalleOS,
   DetalleProducto,
   DetalleProveedor,
   EstadoCliente,
@@ -22,6 +23,7 @@ import type {
   EstadoUnidad,
   ExpedienteUnidad,
   IngresoEsperado,
+  OrdenActiva,
   OrdenHistorial,
   OrdenServicio,
   PerfilTecnico,
@@ -37,6 +39,8 @@ import type {
   Unidad,
   UnidadResumen,
 } from "@/domain/tipos";
+import type { EstadoOS } from "@/domain/estados";
+import type { Area } from "@/domain/areas";
 
 /**
  * Contratos de la capa de datos. Las páginas dependen de estas firmas, nunca
@@ -91,6 +95,23 @@ export interface OrdenServicioRepo {
   recibir(osId: string, datos: DatosRecepcion): Promise<OrdenServicio>;
   /** Unidad que llegó sin cita: crea y recibe en una sola operación. */
   ingresoDirecto(alta: DatosAltaOS, recepcion: DatosRecepcion): Promise<OrdenServicio>;
+  /** Todo lo que no está cerrada ni rechazada, en el alcance de la sesión. */
+  activas(filtros: FiltrosActivas): Promise<OrdenActiva[]>;
+  detalle(folio: string): Promise<DetalleOS | null>;
+  /**
+   * Mueve la O.S. a otro estado. La topología la valida `puedeTransicionar`;
+   * quién tiene facultad, el motor de autorizaciones del backend, que puede
+   * rechazar el cambio aunque la topología lo permita.
+   */
+  cambiarEstado(folio: string, a: EstadoOS, comentario: string | null): Promise<void>;
+}
+
+export interface FiltrosActivas {
+  alcance: string;
+  texto?: string;
+  estado?: EstadoOS;
+  area?: Area;
+  soloEnEspera?: boolean;
 }
 
 /** Solo lectura: los pagos se autorizan en el motor de autorizaciones del backend. */

@@ -73,6 +73,7 @@ export const unidadRepoMemoria: UnidadRepo = {
       kilometrajeUltimo: 0,
       fechaKilometraje: new Date().toISOString().slice(0, 10),
       estado: "activa",
+      ficha: d.ficha,
     };
     unidades.push({
       unidad,

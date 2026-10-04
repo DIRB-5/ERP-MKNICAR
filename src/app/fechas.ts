@@ -31,3 +31,9 @@ export function diasEntre(desde: Date, hasta: Date): number {
   const b = new Date(hasta.getFullYear(), hasta.getMonth(), hasta.getDate());
   return Math.round((b.getTime() - a.getTime()) / 86_400_000);
 }
+
+/** Hoy como AAAA-MM-DD en hora local, para `<input type="date">`. */
+export const hoyISO = (): string => {
+  const d = new Date();
+  return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
+};

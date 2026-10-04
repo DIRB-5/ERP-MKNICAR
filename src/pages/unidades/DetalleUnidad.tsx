@@ -13,6 +13,7 @@ import { ChipEstadoUnidad, TIPO_UNIDAD } from "@/pages/catalogos/etiquetas";
 import styles from "@/pages/catalogos/Catalogo.module.css";
 import { Ubicacion } from "./columnasUnidades";
 import { columnasHistorial } from "./columnasHistorial";
+import { FichaTecnicaPanel } from "./FichaTecnicaPanel";
 
 export function Component() {
   const { placas = "" } = useParams();
@@ -80,7 +81,7 @@ export function Component() {
           <div>
             <dt>Kilometraje actual</dt>
             <dd>
-              {numero(unidad.kilometrajeUltimo)} km
+              {numero(unidad.kilometrajeUltimo)} {unidad.ficha?.unidadOdometro === "mi" ? "mi" : "km"}
               <div className={styles.secundario}>
                 al {fecha(fechaLocal(unidad.fechaKilometraje), { anio: true })}
               </div>
@@ -113,6 +114,8 @@ export function Component() {
           contexto={`en ${new Date().getFullYear()}`}
         />
       </section>
+
+      <FichaTecnicaPanel ficha={unidad.ficha} />
 
       <Panel titulo="Historial de O.S." subtitulo="Las atendidas fuera de su taller base van marcadas" alBorde>
         <DataTable

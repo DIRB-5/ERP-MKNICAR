@@ -9,10 +9,23 @@ export interface DialogoProps {
   confirmar: string;
   onConfirmar: () => void;
   onCancelar: () => void;
+  /** Texto del botón que cierra sin hacer nada. */
+  cancelar?: string;
+  /** Deshabilita la confirmación mientras se guarda. */
+  confirmando?: boolean;
 }
 
 /** Confirmación modal sobre `<dialog>` nativo: foco atrapado y Escape gratis. */
-export function Dialogo({ abierto, titulo, children, confirmar, onConfirmar, onCancelar }: DialogoProps) {
+export function Dialogo({
+  abierto,
+  titulo,
+  children,
+  confirmar,
+  onConfirmar,
+  onCancelar,
+  cancelar = "Revisar",
+  confirmando = false,
+}: DialogoProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -37,8 +50,8 @@ export function Dialogo({ abierto, titulo, children, confirmar, onConfirmar, onC
       </h2>
       <div className={styles.cuerpo}>{children}</div>
       <div className={styles.acciones}>
-        <Button onClick={onCancelar}>Revisar</Button>
-        <Button variante="primario" onClick={onConfirmar}>
+        <Button onClick={onCancelar}>{cancelar}</Button>
+        <Button variante="primario" onClick={onConfirmar} disabled={confirmando}>
           {confirmar}
         </Button>
       </div>

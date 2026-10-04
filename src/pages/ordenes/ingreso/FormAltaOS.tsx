@@ -4,6 +4,7 @@ import { Buscador, type OpcionBusqueda } from "@/components/Buscador/Buscador";
 import { Button } from "@/components/Button/Button";
 import { Aviso } from "@/components/Aviso/Aviso";
 import { Folio } from "@/components/Folio/Folio";
+import { Estado } from "@/components/Estado/Estado";
 import { fecha, numero } from "@/domain/format";
 import type {
   CanalContacto,
@@ -21,11 +22,12 @@ import {
   useUnidades,
 } from "@/data/consultas";
 import { TALLERES } from "@/app/navegacion";
-import { deInputFechaHora, fechaLocal } from "@/app/fechas";
+import { deInputFechaHora, fechaLocal, hoyISO } from "@/app/fechas";
 import { revisarOsPadre } from "@/app/validacionesIngreso";
 import { CANAL, TIPO_UNIDAD } from "@/pages/catalogos/etiquetas";
 import { PRIORIDAD, TIPO_SERVICIO } from "./etiquetas";
 import f from "./Formulario.module.css";
+import { CamposFicha, aFicha, fichaVacia, hayFicha, revisarFicha, type FichaEditable } from "@/pages/unidades/CamposFicha";
 
 /** El padrón se busca completo: una unidad puede llegar a un taller que no es su base. */
 const TODO_EL_PADRON = TALLERES[0];
@@ -39,7 +41,10 @@ export interface EstadoAlta {
   unidadTexto: string;
   tallerId: string;
   tipoIngreso: "cita" | "recoleccion";
+  /** AAAA-MM-DD: día en que llega la unidad. */
   programadaPara: string;
+  /** AAAA-MM-DD: entrega comprometida con el cliente. */
+  entrega: string;
   recoleccion: { direccion: string; fechaHora: string; contactoEnSitio: string };
   tipoServicio: TipoServicio | "";
   motivo: string;
@@ -56,6 +61,7 @@ export type CampoAlta =
   | "unidad"
   | "tallerId"
   | "programadaPara"
+  | "entrega"
   | "direccion"
   | "recoleccionFecha"
   | "contactoEnSitio"
@@ -71,6 +77,7 @@ export const altaInicial = (tallerId: string): EstadoAlta => ({
   tallerId,
   tipoIngreso: "cita",
   programadaPara: "",
+  entrega: "",
   recoleccion: { direccion: "", fechaHora: "", contactoEnSitio: "" },
   tipoServicio: "",
   motivo: "",
@@ -102,14 +109,19 @@ export function revisarAlta(e: EstadoAlta, modo: ModoAlta): RevisionAlta {
   if (!e.motivo.trim()) errores.motivo = "Escribe lo que reporta el cliente.";
 
   if (modo === "programada") {
-    if (e.tipoIngreso === "cita" && !deInputFechaHora(e.programadaPara)) {
-      errores.programadaPara = "Indica fecha y hora de la cita.";
-    }
+    if (e.tipoIngreso === "cita" && !e.programadaPara) errores.programadaPara = "Indica la fecha de la cita.";
+    else if (e.programadaPara && e.programadaPara < hoyISO()) errores.programadaPara = "No puede ser anterior a hoy.";
     if (e.tipoIngreso === "recoleccion") {
       if (!e.recoleccion.direccion.trim()) errores.direccion = "Indica dónde se recoge la unidad.";
       if (!deInputFechaHora(e.recoleccion.fechaHora)) errores.recoleccionFecha = "Indica cuándo se recoge.";
       if (!e.recoleccion.contactoEnSitio.trim()) errores.contactoEnSitio = "Indica a quién buscar en sitio.";
     }
+  }
+
+  // La entrega no puede quedar antes de que la unidad llegue.
+  const llegada = modo === "directo" ? hoyISO() : e.programadaPara || e.recoleccion.fechaHora.slice(0, 10) || hoyISO();
+  if (e.entrega && e.entrega < llegada) {
+    errores.entrega = modo === "directo" ? "No puede ser anterior a hoy." : "No puede ser anterior a la fecha de llegada.";
   }
 
   if (e.esRetrabajo) {
@@ -160,7 +172,8 @@ export function aDatosAlta(e: EstadoAlta, modo: ModoAlta): DatosAltaOS {
     cobraDiagnostico: cobraDiagnostico(cliente),
     osPadreId: e.esRetrabajo ? e.osPadre?.folio : undefined,
     programadaPara:
-      modo === "programada" ? deInputFechaHora(e.programadaPara) ?? recoleccion?.fechaHora : undefined,
+      modo === "programada" ? (e.programadaPara ? fechaLocal(e.programadaPara) : recoleccion?.fechaHora) : undefined,
+    entregaComprometida: e.entrega || undefined,
     recoleccion,
   };
 }
@@ -188,6 +201,9 @@ export function FormAltaOS({ modo, estado: e, onCambiar, errores }: Props) {
 
   const [altaAbierta, setAltaAbierta] = useState(false);
   const [nueva, setNueva] = useState({ placas: "", marca: "", modelo: "", anio: "" });
+  const [fichaAbierta, setFichaAbierta] = useState(false);
+  const [fichaNueva, setFichaNueva] = useState<FichaEditable>(fichaVacia);
+  const erroresFichaNueva = fichaAbierta ? revisarFicha(fichaNueva) : {};
 
   const opcionesCliente: OpcionBusqueda[] = (clientes ?? []).slice(0, 20).map((c) => ({
     id: c.cliente.id,
@@ -221,6 +237,7 @@ export function FormAltaOS({ modo, estado: e, onCambiar, errores }: Props) {
       modelo: nueva.modelo,
       anio: Number(nueva.anio),
       clienteId: e.cliente.id,
+      ficha: fichaAbierta && hayFicha(fichaNueva) ? aFicha(fichaNueva) : undefined,
     });
     onCambiar({
       ...e,
@@ -236,11 +253,18 @@ export function FormAltaOS({ modo, estado: e, onCambiar, errores }: Props) {
     });
     setAltaAbierta(false);
     setNueva({ placas: "", marca: "", modelo: "", anio: "" });
+    setFichaNueva(fichaVacia());
+    setFichaAbierta(false);
   };
 
   const anioNueva = Number(nueva.anio);
   const nuevaValida =
-    nueva.placas.trim() && nueva.marca.trim() && nueva.modelo.trim() && anioNueva >= 1950 && anioNueva <= new Date().getFullYear() + 1;
+    nueva.placas.trim() &&
+    nueva.marca.trim() &&
+    nueva.modelo.trim() &&
+    anioNueva >= 1950 &&
+    anioNueva <= new Date().getFullYear() + 1 &&
+    Object.keys(erroresFichaNueva).length === 0;
 
   return (
     <>
@@ -320,7 +344,7 @@ export function FormAltaOS({ modo, estado: e, onCambiar, errores }: Props) {
           <div className={f.altaRapida} role="group" aria-label="Alta rápida de unidad">
             <div className={f.altaTitulo}>
               Alta rápida para {e.cliente.razonSocial}
-              <span className={f.nota}> · VIN, número económico y taller base se completan después</span>
+              <span className={f.nota}> · VIN, número económico y taller base se completan después. La ficha técnica es opcional.</span>
             </div>
             <div className={f.rejilla4}>
               <Campo etiqueta="Placas" obligatorio>
@@ -336,6 +360,31 @@ export function FormAltaOS({ modo, estado: e, onCambiar, errores }: Props) {
                 {(c) => <Input {...c} inputMode="numeric" maxLength={4} value={nueva.anio} onChange={(x) => setNueva({ ...nueva, anio: x.target.value.replace(/\D/g, "") })} />}
               </Campo>
             </div>
+            {fichaAbierta ? (
+              <div className={f.fichaRapida}>
+                <div className={f.altaTitulo}>
+                  Ficha técnica <span className={f.nota}>· opcional, no detiene el ingreso</span>
+                </div>
+                <CamposFicha idBase="alta-rapida" valor={fichaNueva} onCambiar={setFichaNueva} errores={erroresFichaNueva} />
+                <div>
+                  <Button
+                    variante="fantasma"
+                    onClick={() => {
+                      setFichaAbierta(false);
+                      setFichaNueva(fichaVacia());
+                    }}
+                  >
+                    Quitar ficha técnica
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <Button variante="fantasma" onClick={() => setFichaAbierta(true)}>
+                  + Agregar ficha técnica (tipo de vehículo, llantas, motor)
+                </Button>
+              </div>
+            )}
             {altaRapida.error && <Aviso tono="critico" titulo={altaRapida.error.message} />}
             <div className={f.accionesLinea}>
               <Button variante="primario" disabled={!nuevaValida || altaRapida.isPending} onClick={registrarUnidad}>
@@ -353,7 +402,7 @@ export function FormAltaOS({ modo, estado: e, onCambiar, errores }: Props) {
             <SoloLectura etiqueta="Marca">{e.unidad.unidad.marca}</SoloLectura>
             <SoloLectura etiqueta="Modelo">{e.unidad.unidad.modelo}</SoloLectura>
             <SoloLectura etiqueta="Año">{e.unidad.unidad.anio}</SoloLectura>
-            <SoloLectura etiqueta="Tipo">{TIPO_UNIDAD[e.unidad.unidad.tipo]}</SoloLectura>
+            <SoloLectura etiqueta="Motorización">{TIPO_UNIDAD[e.unidad.unidad.tipo]}</SoloLectura>
             <SoloLectura etiqueta="Km del último servicio">
               {e.unidad.unidad.kilometrajeUltimo > 0
                 ? `${numero(e.unidad.unidad.kilometrajeUltimo)} km · ${fecha(fechaLocal(e.unidad.unidad.fechaKilometraje), { anio: true })}`
@@ -421,24 +470,35 @@ export function FormAltaOS({ modo, estado: e, onCambiar, errores }: Props) {
           </div>
         )}
 
-        {modo === "programada" && (
-          <div className={f.rejilla2}>
+        <div className={f.rejilla2}>
+          {modo === "programada" && (
             <Campo
-              etiqueta={e.tipoIngreso === "cita" ? "Fecha y hora programada" : "Llegada estimada al taller"}
+              etiqueta="Fecha"
               obligatorio={e.tipoIngreso === "cita"}
               error={errores.programadaPara}
-              ayuda={e.tipoIngreso === "recoleccion" ? "Si la dejas vacía se toma la hora de recolección." : undefined}
+              ayuda={e.tipoIngreso === "recoleccion" ? "Llegada al taller. Si la dejas vacía se toma el día de recolección." : "Día en que llega la unidad."}
             >
-              {(c) => <Input {...c} type="datetime-local" value={e.programadaPara} onChange={(x) => set("programadaPara", x.target.value)} />}
+              {(c) => <Input {...c} type="date" min={hoyISO()} value={e.programadaPara} onChange={(x) => set("programadaPara", x.target.value)} />}
             </Campo>
-          </div>
-        )}
+          )}
+          <Campo etiqueta="Entrega" error={errores.entrega} ayuda="Fecha comprometida con el cliente. Se puede fijar después del diagnóstico.">
+            {(c) => (
+              <Input
+                {...c}
+                type="date"
+                min={modo === "directo" ? hoyISO() : e.programadaPara || hoyISO()}
+                value={e.entrega}
+                onChange={(x) => set("entrega", x.target.value)}
+              />
+            )}
+          </Campo>
+        </div>
       </fieldset>
 
       {/* ── Motivo ──────────────────────────────────────── */}
       <fieldset className={f.seccion}>
         <legend className={f.seccionTitulo}>Motivo</legend>
-        <div className={f.rejilla2}>
+        <div className={f.rejilla3}>
           <Campo etiqueta="Tipo de servicio" obligatorio error={errores.tipoServicio}>
             {(c) => (
               <Select {...c} value={e.tipoServicio} onChange={(x) => set("tipoServicio", x.target.value as TipoServicio)}>
@@ -458,6 +518,10 @@ export function FormAltaOS({ modo, estado: e, onCambiar, errores }: Props) {
               </Select>
             )}
           </Campo>
+          {/* Solo informa: el estado nace fijo y después cambia únicamente por transiciones. */}
+          <SoloLectura etiqueta="Estatus">
+            <Estado estado={modo === "directo" ? "unidad_recibida" : "programada"} />
+          </SoloLectura>
         </div>
         <Campo
           etiqueta="Motivo reportado por el cliente"

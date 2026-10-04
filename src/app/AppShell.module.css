@@ -18,3 +18,15 @@
   margin: 0 auto;
   padding: var(--space-5) var(--gutter) var(--space-10);
 }
+
+/* Franja de datos de muestra: solo aparece en desarrollo con ?muestra. */
+.muestra {
+  flex: none;
+  padding: var(--space-1) var(--gutter);
+  background: var(--brand);
+  color: var(--ink-inverse);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.muestra a { color: var(--ink-inverse); font-weight: 600; text-decoration: underline; }

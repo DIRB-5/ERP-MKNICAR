@@ -11,7 +11,9 @@ import type {
   ClienteResumen,
   OrdenHistorial,
   OrdenServicio,
+  ExpedienteOS,
   RecepcionUnidad,
+  TramoEstado,
   UnidadResumen,
 } from "@/domain/tipos";
 
@@ -26,3 +28,7 @@ export const buscarCliente = (id: string): Cliente | null =>
 /* Lo que se crea en esta sesión del navegador; se pierde al recargar. */
 export const ordenes: OrdenServicio[] = [];
 export const recepciones: RecepcionUnidad[] = [];
+/** Paso de cada O.S. por la máquina de estados, por folio. */
+export const historialEstados = new Map<string, TramoEstado[]>();
+/** Presupuesto, compras y mano de obra de cada O.S., por folio. */
+export const expedientesOS = new Map<string, ExpedienteOS>();

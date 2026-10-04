@@ -76,6 +76,16 @@
   background: var(--brand-tint);
 }
 
+.fichaRapida {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
 .altaTitulo { font-size: 0.8125rem; font-weight: 600; }
 .nota { font-weight: 400; color: var(--ink-muted); font-size: 0.75rem; }
 

@@ -19,7 +19,14 @@ import {
   tesoreriaRepo,
   unidadRepo,
 } from "./index";
-import type { FiltrosClientes, FiltrosProductos, FiltrosProveedores, FiltrosUnidades } from "./repositorios";
+import type {
+  FiltrosActivas,
+  FiltrosClientes,
+  FiltrosProductos,
+  FiltrosProveedores,
+  FiltrosUnidades,
+} from "./repositorios";
+import type { EstadoOS } from "@/domain/estados";
 
 export const useClientes = (f: FiltrosClientes) =>
   useQuery({ queryKey: ["clientes", "lista", f], queryFn: () => clienteRepo.listar(f) });
@@ -206,3 +213,20 @@ export const useComparativos = (alcance: string) =>
 
 export const useComparativo = (folio: string) =>
   useQuery({ queryKey: ["compras", "comparativo", folio], queryFn: () => compraRepo.comparativo(folio) });
+
+/* ── Seguimiento de O.S. ─────────────────────────────────────────── */
+
+export const useOrdenesActivas = (f: FiltrosActivas) =>
+  useQuery({ queryKey: ["ordenes", "activas", f], queryFn: () => ordenServicioRepo.activas(f) });
+
+export const useDetalleOS = (folio: string) =>
+  useQuery({ queryKey: ["ordenes", "detalle", folio], queryFn: () => ordenServicioRepo.detalle(folio) });
+
+export function useCambiarEstado() {
+  const invalidar = useInvalidar();
+  return useMutation({
+    mutationFn: (v: { folio: string; a: EstadoOS; comentario: string | null }) =>
+      ordenServicioRepo.cambiarEstado(v.folio, v.a, v.comentario),
+    onSuccess: invalidar,
+  });
+}

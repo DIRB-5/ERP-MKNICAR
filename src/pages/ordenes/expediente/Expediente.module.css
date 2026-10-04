@@ -1,0 +1,100 @@
+.pestana { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.cabecera { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); font-size: 0.8125rem; font-weight: 600; }
+
+.meta {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: var(--ink-subtle);
+}
+
+.nota { margin: 0; font-size: 0.75rem; color: var(--ink-muted); }
+.subtitulo { margin: var(--space-2) 0 0; font-size: 0.75rem; font-weight: 600; }
+.fuerte { font-weight: 600; color: var(--ink); }
+.malo { color: var(--critical); }
+.der { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Las tablas del expediente son dato: sólidas. */
+.scroll { overflow-x: auto; }
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.6875rem;
+}
+
+.tabla th {
+  padding: var(--space-2);
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-subtle);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.tabla td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--ink-muted);
+  vertical-align: top;
+}
+
+.tabla tfoot td { background: var(--surface-raised); font-weight: 600; color: var(--ink); }
+
+.grupo td {
+  background: var(--brand-tint);
+  color: var(--ink);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.resumen {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.totales, .utilidad {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: var(--space-1) var(--space-6);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: 0.75rem;
+  align-self: flex-start;
+}
+
+.totales { margin-left: auto; }
+
+.totales dt, .utilidad dt { color: var(--ink-muted); }
+.totales dd, .utilidad dd { margin: 0; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Ingreso − refacciones − mano de obra = margen */
+.ecuacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: 1rem;
+  color: var(--ink-subtle);
+}
+
+.ecuacion > div { display: flex; flex-direction: column; color: var(--ink); }
+.margen { padding-left: var(--space-3); border-left: 2px solid var(--brand-mid); font-weight: 600; }

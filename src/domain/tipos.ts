@@ -66,6 +66,34 @@ export interface Unidad {
   /** AAAA-MM-DD. */
   fechaKilometraje: string;
   estado: EstadoUnidad;
+  /** Ficha técnica. Opcional: la alta rápida del ingreso no la captura. */
+  ficha?: FichaTecnica;
+}
+
+export type UnidadOdometro = "km" | "mi";
+export type ArbolLevas = "ohv" | "sohc" | "dohc";
+
+/** Primer perfil técnico del vehículo, como lo capturaba el sistema anterior. */
+export interface FichaTecnica {
+  /** Camioneta, tractocamión, van… */
+  tipoVehiculo: string;
+  subModelo: string;
+  color: string;
+  /** En qué unidad mide el odómetro; el kilometraje se guarda en esa unidad. */
+  unidadOdometro: UnidadOdometro;
+  tipoLlanta: string;
+  /** Kilómetros que rinde la llanta, para proyectar su cambio. */
+  rendimientoLlantaKm: number | null;
+  /** Medida comercial, p. ej. 265/70 R17. */
+  medidaLlantaDelantera: string;
+  medidaLlantaTrasera: string;
+  capacidadTanqueLitros: number | null;
+  motorLitros: number | null;
+  motorCodigo: string;
+  motorValvulas: number | null;
+  motorCc: number | null;
+  motorCilindros: number | null;
+  arbolLevas: ArbolLevas | null;
 }
 
 /** Alta completa de unidad. Toda unidad nace activa. */
@@ -163,7 +191,10 @@ export interface OrdenServicio {
   cobraDiagnostico: boolean;
   /** O.S. original cuando es retrabajo o garantía. */
   osPadreId?: string;
+  /** Día de llegada de la unidad (cita) o al taller (recolección). */
   programadaPara?: Date;
+  /** AAAA-MM-DD comprometido con el cliente; se puede fijar después del diagnóstico. */
+  entregaComprometida?: string;
   recoleccion?: Recoleccion;
   estado: EstadoOS;
   creadaEn: Date;
@@ -232,7 +263,7 @@ export interface IngresoEsperado {
   orden: OrdenServicio;
   cliente: { id: string; razonSocial: string };
   unidad: Unidad;
-  /** Hora de la cita o de la recolección. */
+  /** Hora de la recolección; null en citas, que se agendan por día. */
   hora: Date | null;
 }
 
@@ -243,6 +274,8 @@ export interface DatosAltaRapidaUnidad {
   modelo: string;
   anio: number;
   clienteId: string;
+  /** Opcional: el administrador la captura si tiene los datos a la mano. */
+  ficha?: FichaTecnica;
 }
 
 /* ── Tesorería: vistas de lectura que arma el backend ─────────────── */
@@ -823,4 +856,111 @@ export interface RequisicionEnComparativo {
   invitados: number;
   solicitada: string;
   estimadoInicial: number;
+}
+
+/* ── Seguimiento de O.S. activas ──────────────────────────────────── */
+
+/** Renglón de la vista de O.S. activas: todo lo que no está cerrada ni rechazada. */
+export interface OrdenActiva {
+  folio: string;
+  estado: EstadoOS;
+  /** Días en el estado actual. */
+  diasEnEstado: number;
+  prioridad: PrioridadOS;
+  tipoServicio: TipoServicio;
+  unidad: { id: string; placas: string; marca: string; modelo: string };
+  cliente: { id: string; razonSocial: string };
+  /** Taller donde se atiende la O.S. */
+  taller: TallerRef;
+  /** Taller base de la unidad; si difiere del de la O.S., se marca "Fuera de base". */
+  tallerBase: TallerRef | null;
+  asesor: string | null;
+  /** AAAA-MM-DD. */
+  entregaComprometida: string | null;
+}
+
+/** Un paso por la máquina de estados, con quién lo movió y por qué. */
+export interface TramoEstado {
+  estado: EstadoOS;
+  /** ISO 8601. */
+  desde: string;
+  /** ISO 8601; null en el estado actual. */
+  hasta: string | null;
+  responsable: string | null;
+  /** Motivo capturado al entrar al estado; obligatorio en retornos. */
+  comentario: string | null;
+}
+
+export interface DetalleOS {
+  resumen: OrdenActiva;
+  vin: string;
+  anio: number;
+  kilometrajeIngreso: number | null;
+  clienteTipo: TipoCliente | null;
+  tipoIngreso: TipoIngreso;
+  motivoReportado: string;
+  historial: TramoEstado[];
+  /** Presupuesto, compras y mano de obra ligados a la O.S. */
+  expediente: ExpedienteOS;
+}
+
+/* Expediente de la O.S.: lo que la afecta, como en la ventana del sistema anterior */
+
+export type TipoConcepto = "refaccion" | "mano_obra";
+
+export interface ConceptoPresupuesto {
+  id: string;
+  tipo: TipoConcepto;
+  /** Número de parte o clave del servicio. */
+  clave: string;
+  descripcion: string;
+  /** Pieza, juego, servicio, hora… */
+  unidad: string;
+  cantidad: number;
+  /** Costo unitario para MKNICAR. */
+  costo: number;
+  precioUnitario: number;
+  /** Descuento en pesos sobre el importe del renglón. */
+  descuento: number;
+}
+
+export interface PresupuestoOS {
+  folio: string;
+  version: number;
+  /** AAAA-MM-DD. */
+  fecha: string;
+  conceptos: ConceptoPresupuesto[];
+}
+
+export type TipoDocumentoCompra = "requisicion" | "ordenCompra";
+
+export interface DocumentoCompra {
+  tipo: TipoDocumentoCompra;
+  folio: string;
+  proveedor: string | null;
+  /** Estado del documento como lo reporta compras: "En comparativo", "Autorizada"… */
+  estado: string;
+  /** AAAA-MM-DD. */
+  fecha: string;
+  monto: number | null;
+}
+
+export interface ManoObraTecnico {
+  tecnicoId: string;
+  tecnico: string;
+  puesto: string;
+  /** AAAA-MM-DD. */
+  fecha: string;
+  horasEstandar: number;
+  horasReales: number;
+  costoHora: number;
+}
+
+
+export interface ExpedienteOS {
+  presupuesto: PresupuestoOS | null;
+  compras: DocumentoCompra[];
+  manoObra: ManoObraTecnico[];
+  /** Costo real de las refacciones compradas para esta O.S. */
+  costoRefacciones: number | null;
 }

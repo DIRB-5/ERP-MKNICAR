@@ -12,6 +12,7 @@ import { normalizarPlacas, revisarAnio, revisarPlacas, revisarVin } from "@/app/
 import { useTallerPorDefecto } from "@/pages/ordenes/ingreso/useTallerPorDefecto";
 import { TIPO_UNIDAD } from "@/pages/catalogos/etiquetas";
 import f from "@/pages/ordenes/ingreso/Formulario.module.css";
+import { CamposFicha, aFicha, fichaVacia, revisarFicha, type FichaEditable } from "./CamposFicha";
 
 const TODO_EL_PADRON = TALLERES[0];
 
@@ -28,9 +29,11 @@ interface EstadoUnidad {
   tallerBaseId: string;
   kilometraje: string;
   fechaKilometraje: string;
+  /** Ficha técnica: todo opcional. */
+  ficha: FichaEditable;
 }
 
-type CampoUnidad = keyof Omit<EstadoUnidad, "clienteTexto" | "numeroEconomico" | "tipo">;
+type CampoUnidad = keyof Omit<EstadoUnidad, "clienteTexto" | "numeroEconomico" | "tipo" | "ficha">;
 
 const hoyISO = () => {
   const d = new Date();
@@ -52,6 +55,7 @@ function revisar(e: EstadoUnidad): Partial<Record<CampoUnidad, string>> {
   if (e.kilometraje.trim() === "") errores.kilometraje = "Captura el kilometraje u horómetro actual.";
   if (!e.fechaKilometraje) errores.fechaKilometraje = "Indica la fecha de la lectura.";
   else if (e.fechaKilometraje > hoyISO()) errores.fechaKilometraje = "No puede ser una fecha futura.";
+
   return errores;
 }
 
@@ -68,6 +72,7 @@ function aDatos(e: EstadoUnidad): DatosAltaUnidad {
     tallerBaseId: e.tallerBaseId,
     kilometrajeUltimo: Number(e.kilometraje),
     fechaKilometraje: e.fechaKilometraje,
+    ficha: aFicha(e.ficha),
   };
 }
 
@@ -94,6 +99,7 @@ export function Component() {
     tallerBaseId: tallerDefecto,
     kilometraje: "",
     fechaKilometraje: hoyISO(),
+    ficha: fichaVacia(),
   }));
   const [intentado, setIntentado] = useState(false);
   const [precargado, setPrecargado] = useState(false);
@@ -112,8 +118,10 @@ export function Component() {
   }));
 
   const erroresTodos = revisar(estado);
+  const erroresFichaTodos = revisarFicha(estado.ficha);
   const errores = intentado ? erroresTodos : {};
-  const numErrores = Object.keys(erroresTodos).length;
+  const erroresFicha = intentado ? erroresFichaTodos : {};
+  const numErrores = Object.keys(erroresTodos).length + Object.keys(erroresFichaTodos).length;
   const set = <K extends keyof EstadoUnidad>(k: K, v: EstadoUnidad[K]) => setEstado({ ...estado, [k]: v });
 
   const guardar = async () => {
@@ -202,7 +210,7 @@ export function Component() {
               <Input {...p} inputMode="numeric" maxLength={4} value={estado.anio} onChange={(x) => set("anio", x.target.value.replace(/\D/g, ""))} />
             )}
           </Campo>
-          <Campo etiqueta="Tipo" obligatorio>
+          <Campo etiqueta="Motorización" obligatorio>
             {(p) => (
               <Select {...p} value={estado.tipo} onChange={(x) => set("tipo", x.target.value as TipoUnidad)}>
                 {(Object.keys(TIPO_UNIDAD) as TipoUnidad[]).map((t) => (
@@ -212,6 +220,11 @@ export function Component() {
             )}
           </Campo>
         </div>
+      </Surface>
+
+      <Surface as="section" aria-labelledby="sec-ficha" className={f.bloque}>
+        <h2 id="sec-ficha" className={f.bloqueTitulo}>Ficha técnica</h2>
+        <CamposFicha idBase="alta-completa" valor={estado.ficha} onCambiar={(x) => set("ficha", x)} errores={erroresFicha} />
       </Surface>
 
       <Surface as="section" aria-labelledby="sec-operacion" className={f.bloque}>
@@ -232,7 +245,7 @@ export function Component() {
               </Select>
             )}
           </Campo>
-          <Campo etiqueta="Kilometraje u horómetro" obligatorio error={errores.kilometraje}>
+          <Campo etiqueta={estado.ficha.unidadOdometro === "km" ? "Kilometraje u horómetro" : "Millaje u horómetro"} obligatorio error={errores.kilometraje}>
             {(p) => (
               <Input {...p} inputMode="numeric" value={estado.kilometraje} onChange={(x) => set("kilometraje", x.target.value.replace(/\D/g, ""))} />
             )}

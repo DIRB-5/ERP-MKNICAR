@@ -44,9 +44,12 @@ export function Buscador({
   const idLista = `${id}-lista`;
   const mostrar = abierto && !seleccion && texto.trim().length > 0;
 
+  // El texto va primero y la selección al final: quien usa el buscador suele
+  // actualizar su estado completo en cada aviso, y el último gana. Al revés, el
+  // texto pisaba la selección recién hecha.
   const elegir = (o: OpcionBusqueda) => {
-    onSeleccionar(o);
     onTexto(o.etiqueta);
+    onSeleccionar(o);
     setAbierto(false);
   };
 
