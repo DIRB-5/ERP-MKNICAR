@@ -43,23 +43,25 @@ export function puntos(valor: number, decimales = 1): string {
 export const dias = (valor: number): string =>
   valor < 1 ? valor.toFixed(1) : String(Math.round(valor));
 
-const FECHA = new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "short" });
-const FECHA_ANIO = new Intl.DateTimeFormat("es-MX", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
 const HORA = new Intl.DateTimeFormat("es-MX", {
   hour: "2-digit",
   minute: "2-digit",
   hour12: false,
 });
 
-const limpia = (s: string) => s.replace(/\./g, "");
+const MES = new Intl.DateTimeFormat("es-MX", { month: "short" });
 
-/** 22 ago · 22 ago 2026 — nunca numérica ambigua. */
+/**
+ * 22 ago · 22 ago 2026 — nunca numérica ambigua.
+ *
+ * Se arma por partes: el formato de Intl para es-MX une día y mes con guion
+ * ("03-sep") y algunos motores abrevian septiembre como "sept". El mes se
+ * deja siempre en tres letras, sin punto.
+ */
 export function fecha(d: Date, opts?: { anio?: boolean }): string {
-  return limpia(opts?.anio ? FECHA_ANIO.format(d) : FECHA.format(d));
+  const mes = MES.format(d).replace(/\./g, "").slice(0, 3).toLowerCase();
+  const base = `${d.getDate()} ${mes}`;
+  return opts?.anio ? `${base} ${d.getFullYear()}` : base;
 }
 
 /** 22 ago, 14:32 */
