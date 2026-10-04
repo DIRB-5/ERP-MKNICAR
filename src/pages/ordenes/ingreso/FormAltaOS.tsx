@@ -308,7 +308,7 @@ export function FormAltaOS({ modo, estado: e, onCambiar, errores }: Props) {
             obligatorio
             error={errores.unidad}
             ayuda={
-              e.cliente && !altaAbierta ? (
+              e.cliente && !e.unidad && !altaAbierta ? (
                 <Button variante="fantasma" onClick={() => setAltaAbierta(true)}>
                   La unidad no está registrada
                 </Button>

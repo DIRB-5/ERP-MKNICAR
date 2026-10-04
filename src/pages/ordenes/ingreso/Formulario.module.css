@@ -12,6 +12,14 @@
 
 .migas { font-size: 0.75rem; color: var(--ink-muted); }
 
+.encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
 .titulo {
   margin: 0;
   font-size: 1.1875rem;

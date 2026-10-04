@@ -84,6 +84,9 @@ export function Component() {
 
   // Desde el expediente de un cliente se llega con ?cliente=id: el cliente ya viene elegido.
   const clienteParam = params.get("cliente") ?? "";
+  // Desde Crear O.S. (?desde=os): al guardar se regresa a la O.S. con la unidad elegida.
+  const desdeOS = params.get("desde") === "os";
+  const volverOS = `/ordenes/nueva${clienteParam ? `?cliente=${encodeURIComponent(clienteParam)}` : ""}`;
   const { data: clientePrevio } = useCliente(clienteParam);
 
   const [estado, setEstado] = useState<EstadoUnidad>(() => ({
@@ -128,7 +131,11 @@ export function Component() {
     setIntentado(true);
     if (numErrores > 0) return;
     const unidad = await crear.mutateAsync(aDatos(estado));
-    navigate(`/unidades/${encodeURIComponent(unidad.placas)}`);
+    if (desdeOS) {
+      navigate(`/ordenes/nueva?cliente=${encodeURIComponent(unidad.clienteId)}&unidad=${encodeURIComponent(unidad.placas)}`);
+    } else {
+      navigate(`/unidades/${encodeURIComponent(unidad.placas)}`);
+    }
   };
 
   return (
@@ -141,13 +148,22 @@ export function Component() {
       }}
     >
       <div className={f.migas}>
-        <Link to="/unidades">Unidades</Link> / Registrar unidad
+        {desdeOS ? (
+          <>
+            <Link to="/ordenes">Órdenes de Servicio</Link> / <Link to={volverOS}>Crear O.S.</Link> / Registrar unidad
+          </>
+        ) : (
+          <>
+            <Link to="/unidades">Unidades</Link> / Registrar unidad
+          </>
+        )}
       </div>
       <header>
         <h1 className={f.titulo}>Registrar unidad</h1>
         <p className={f.subtitulo}>
-          Alta completa en el padrón. Si la unidad ya está en el taller y falta el VIN, usa el alta rápida desde el
-          ingreso directo.
+          {desdeOS
+            ? "Al guardar regresas a Crear O.S. con esta unidad ya elegida para continuar."
+            : "Alta completa en el padrón. Si la unidad ya está en el taller y falta el VIN, usa el alta rápida desde el ingreso directo."}
         </p>
       </header>
 
@@ -265,9 +281,9 @@ export function Component() {
             Revisa {numErrores} {numErrores === 1 ? "campo" : "campos"} marcados.
           </span>
         )}
-        <Link to="/unidades">Cancelar</Link>
+        <Link to={desdeOS ? volverOS : "/unidades"}>{desdeOS ? "Volver a la O.S." : "Cancelar"}</Link>
         <Button type="submit" variante="primario" disabled={crear.isPending}>
-          {crear.isPending ? "Guardando…" : "Registrar unidad"}
+          {crear.isPending ? "Guardando…" : desdeOS ? "Registrar y volver a la O.S." : "Registrar unidad"}
         </Button>
       </Surface>
     </form>
