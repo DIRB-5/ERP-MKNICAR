@@ -30,6 +30,7 @@ import type {
   PersonaReceptora,
   Producto,
   Proveedor,
+  RegistroCatalogo,
   RequisicionEnComparativo,
   SaldoProveedor,
   Subcategoria,
@@ -38,9 +39,11 @@ import type {
   TipoUnidad,
   Unidad,
   UnidadResumen,
+  ValorCampo,
 } from "@/domain/tipos";
 import type { EstadoOS } from "@/domain/estados";
 import type { Area } from "@/domain/areas";
+import type { ClaveCatalogo } from "@/domain/catalogos";
 
 /**
  * Contratos de la capa de datos. Las páginas dependen de estas firmas, nunca
@@ -167,4 +170,20 @@ export interface PersonalRepo {
 export interface CompraRepo {
   comparativos(alcance: string): Promise<RequisicionEnComparativo[]>;
   comparativo(folio: string): Promise<ComparativoCotizacion | null>;
+}
+
+export interface FiltrosRegistro {
+  alcance: string;
+  texto?: string;
+  incluirInactivos?: boolean;
+}
+
+/** Un solo repositorio para todos los catálogos del registro declarativo. */
+export interface CatalogoGenericoRepo {
+  listar(catalogo: ClaveCatalogo, filtros: FiltrosRegistro): Promise<RegistroCatalogo[]>;
+  obtener(catalogo: ClaveCatalogo, id: string): Promise<RegistroCatalogo | null>;
+  crear(catalogo: ClaveCatalogo, valores: Record<string, ValorCampo>, tallerId: string | null): Promise<RegistroCatalogo>;
+  actualizar(catalogo: ClaveCatalogo, id: string, valores: Record<string, ValorCampo>, tallerId: string | null): Promise<RegistroCatalogo>;
+  /** Baja y reactivación lógicas: el registro nunca se borra. */
+  cambiarActivo(catalogo: ClaveCatalogo, id: string, activo: boolean): Promise<void>;
 }

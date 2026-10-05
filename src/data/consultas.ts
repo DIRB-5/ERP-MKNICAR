@@ -9,8 +9,10 @@ import type {
   DatosAltaRapidaUnidad,
   DatosAltaUnidad,
   DatosRecepcion,
+  ValorCampo,
 } from "@/domain/tipos";
 import {
+  catalogoGenericoRepo,
   catalogoRepo,
   clienteRepo,
   compraRepo,
@@ -24,9 +26,11 @@ import type {
   FiltrosClientes,
   FiltrosProductos,
   FiltrosProveedores,
+  FiltrosRegistro,
   FiltrosUnidades,
 } from "./repositorios";
 import type { EstadoOS } from "@/domain/estados";
+import type { ClaveCatalogo } from "@/domain/catalogos";
 
 export const useClientes = (f: FiltrosClientes) =>
   useQuery({ queryKey: ["clientes", "lista", f], queryFn: () => clienteRepo.listar(f) });
@@ -228,5 +232,32 @@ export function useCambiarEstado() {
     mutationFn: (v: { folio: string; a: EstadoOS; comentario: string | null }) =>
       ordenServicioRepo.cambiarEstado(v.folio, v.a, v.comentario),
     onSuccess: invalidar,
+  });
+}
+
+/* ── Catálogos genéricos ─────────────────────────────────────────── */
+
+export const useRegistros = (c: ClaveCatalogo, f: FiltrosRegistro) =>
+  useQuery({ queryKey: ["catalogos", c, "lista", f], queryFn: () => catalogoGenericoRepo.listar(c, f) });
+
+export const useRegistro = (c: ClaveCatalogo, id: string) =>
+  useQuery({ queryKey: ["catalogos", c, id], queryFn: () => catalogoGenericoRepo.obtener(c, id), enabled: id !== "" });
+
+export function useGuardarRegistro(c: ClaveCatalogo) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { id: string | null; valores: Record<string, ValorCampo>; tallerId: string | null }) =>
+      v.id ? catalogoGenericoRepo.actualizar(c, v.id, v.valores, v.tallerId) : catalogoGenericoRepo.crear(c, v.valores, v.tallerId),
+    // "all": también recarga la lista aunque no esté en pantalla, para no mostrarla vieja al volver.
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["catalogos", c], refetchType: "all" }),
+  });
+}
+
+export function useCambiarActivo(c: ClaveCatalogo) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { id: string; activo: boolean }) => catalogoGenericoRepo.cambiarActivo(c, v.id, v.activo),
+    // "all": también recarga la lista aunque no esté en pantalla, para no mostrarla vieja al volver.
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["catalogos", c], refetchType: "all" }),
   });
 }

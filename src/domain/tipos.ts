@@ -964,3 +964,16 @@ export interface ExpedienteOS {
   /** Costo real de las refacciones compradas para esta O.S. */
   costoRefacciones: number | null;
 }
+
+/* ── Catálogos genéricos (ver domain/catalogos.ts) ────────────────── */
+
+export type ValorCampo = string | number | boolean | null;
+
+/** Un renglón de cualquier catálogo del registro. La baja es lógica: `activo`. */
+export interface RegistroCatalogo {
+  id: string;
+  activo: boolean;
+  /** Solo en catálogos `porTaller`. */
+  tallerId: string | null;
+  valores: Record<string, ValorCampo>;
+}

@@ -36,9 +36,10 @@ export const NAVEGACION: readonly ItemNav[] = [
   { etiqueta: "Reportes", proximamente: true },
   {
     etiqueta: "Catálogos",
-    to: "/clientes",
-    tambienEn: ["/unidades", "/productos", "/proveedores"],
+    to: "/catalogos",
+    tambienEn: ["/clientes", "/unidades", "/productos", "/proveedores"],
     submenu: [
+      { etiqueta: "Todos los catálogos", to: "/catalogos" },
       { etiqueta: "Clientes", to: "/clientes" },
       { etiqueta: "Unidades", to: "/unidades" },
       { etiqueta: "Proveedores y productos", to: "/productos" },
