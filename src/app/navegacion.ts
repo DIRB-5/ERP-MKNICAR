@@ -58,6 +58,7 @@ export const NAVEGACION: readonly ItemNav[] = [
       { etiqueta: "Configuración", proximamente: true },
     ],
   },
+  { etiqueta: "Inventarios", proximamente: true },
   {
     etiqueta: "Tesorería",
     to: "/tesoreria",
@@ -67,7 +68,8 @@ export const NAVEGACION: readonly ItemNav[] = [
       { etiqueta: "Cuentas por cobrar", to: "/tesoreria/cuentas-por-cobrar" },
     ],
   },
-  { etiqueta: "Almacén", proximamente: true },
+  // Antes "Almacén": la unidad de negocio a la que se dirige gasto o utilidad. No es el inventario.
+  { etiqueta: "Unidades de Negocio", proximamente: true },
   { etiqueta: "Facturación", proximamente: true },
   {
     etiqueta: "Personal",
