@@ -64,6 +64,13 @@
   transition: background 0.12s ease;
 }
 
+.itemGrupo {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  cursor: default;
+}
+
 .item:hover {
   background: var(--nav-hover);
   color: var(--ink);
@@ -169,6 +176,22 @@
   font-weight: 600;
 }
 
+.subitemOff,
+.subitemOff:hover {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background: transparent;
+  color: var(--ink-disabled);
+  cursor: not-allowed;
+}
+
+.subitemNota {
+  font-size: 0.625rem;
+  color: var(--ink-subtle);
+}
+
 .derecha {
   flex: none;
   display: flex;
@@ -244,6 +267,90 @@
 .chevron {
   color: var(--ink-muted);
   font-size: 0.625rem;
+}
+
+/* Barra del módulo: todas las opciones del módulo donde estás. */
+.filaModuloWrap {
+  border-top: 1px solid var(--glass-border-ink);
+}
+
+.filaModulo {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-1) var(--gutter);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+}
+
+.moduloNombre {
+  flex: none;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--ink-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+/* Se parte en renglones en vez de esconder opciones detrás de un scroll. */
+.moduloLista,
+.moduloAcciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.moduloLista {
+  flex: 1;
+}
+
+.moduloAcciones {
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--glass-border-ink);
+}
+
+.moduloItem,
+.moduloAccion {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: var(--nav-item-height);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-lg);
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--ink-nav);
+  text-decoration: none;
+}
+
+.moduloAccion {
+  color: var(--brand-mid);
+  font-weight: 600;
+}
+
+.moduloItem:hover,
+.moduloAccion:hover {
+  background: var(--nav-hover);
+  color: var(--ink);
+}
+
+.moduloOff,
+.moduloOff:hover {
+  background: transparent;
+  color: var(--ink-disabled);
+  cursor: not-allowed;
+}
+
+.moduloActivo,
+.moduloActivo:hover {
+  background: var(--nav-active);
+  color: var(--ink);
+  font-weight: 600;
 }
 
 .fila2wrap {

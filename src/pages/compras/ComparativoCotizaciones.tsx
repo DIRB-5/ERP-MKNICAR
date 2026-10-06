@@ -307,7 +307,7 @@ export function Component() {
   return (
     <div className={styles.vista}>
       <div className={c.migas}>
-        <Link to="/compras/comparativos">Compras</Link> / Comparativo de cotizaciones / <b>{folio}</b>
+        Proveedores / <Link to="/compras/comparativos">Comparativo de cotizaciones</Link> / <b>{folio}</b>
       </div>
 
       <Surface as="header" className={c.ficha}>

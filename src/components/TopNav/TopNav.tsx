@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { NavLink, matchPath, useLocation } from "react-router-dom";
+import { Link, NavLink, matchPath, useLocation } from "react-router-dom";
 import styles from "./TopNav.module.css";
 
 export interface ItemNav {
@@ -11,8 +11,36 @@ export interface ItemNav {
   contador?: number;
   /** Otras rutas que pertenecen a este módulo, p. ej. `/operacion` bajo Dashboard. */
   tambienEn?: readonly string[];
-  /** Opciones que se despliegan al pasar el mouse o al llegar con el teclado. */
-  submenu?: readonly { etiqueta: string; to: string }[];
+  /**
+   * Opciones del módulo. Se despliegan al pasar el mouse y, dentro del módulo,
+   * se muestran todas en la barra del módulo. `accion` las separa a la derecha.
+   */
+  submenu?: readonly OpcionModulo[];
+}
+
+export type OpcionModulo =
+  | {
+      etiqueta: string;
+      to: string;
+      /** Crea algo (alta, ingreso) en lugar de llevar a una consulta. */
+      accion?: boolean;
+      proximamente?: undefined;
+    }
+  /** Pantalla que todavía no existe: se ve deshabilitada, como en el menú principal. */
+  | { etiqueta: string; proximamente: true; to?: undefined; accion?: undefined };
+
+const coincide = (to: string, pathname: string) =>
+  to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`);
+
+/**
+ * Opción vigente: la ruta más específica que contiene a la actual. Así
+ * `/ordenes/nueva` marca "Nueva O.S." y no "Órdenes", y `/catalogos/servicios`
+ * marca Servicios y no el índice.
+ */
+function opcionVigente(opciones: readonly OpcionModulo[], pathname: string): string | undefined {
+  return opciones
+    .flatMap((o) => (o.to != null && coincide(o.to, pathname) ? [o] : []))
+    .sort((a, b) => b.to.length - a.to.length)[0]?.to;
 }
 
 /**
@@ -21,6 +49,8 @@ export interface ItemNav {
  * pequeño retraso para que el mouse cruce el hueco entre item y menú.
  */
 function ConSubmenu({ item, children }: { item: ItemNav; children: ReactNode }) {
+  const { pathname } = useLocation();
+  const vigente = opcionVigente(item.submenu ?? [], pathname);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<number | undefined>(undefined);
@@ -50,7 +80,7 @@ function ConSubmenu({ item, children }: { item: ItemNav; children: ReactNode }) 
       onKeyDown={(e) => {
         if (e.key === "Escape") {
           setPos(null);
-          ref.current?.querySelector("a")?.focus();
+          ref.current?.querySelector<HTMLElement>("a, button")?.focus();
         }
       }}
     >
@@ -58,16 +88,22 @@ function ConSubmenu({ item, children }: { item: ItemNav; children: ReactNode }) 
       {pos && (
         <ul className={styles.submenu} style={{ top: pos.top, left: pos.left }} aria-label={item.etiqueta}>
           {item.submenu?.map((s) => (
-            <li key={s.to}>
-              <NavLink
-                to={s.to}
-                // "/tesoreria" no debe marcarse dentro de "/tesoreria/cuentas-por-pagar".
-                end={item.submenu?.some((o) => o.to !== s.to && o.to.startsWith(`${s.to}/`))}
-                className={({ isActive }) => `${styles.subitem} ${isActive ? styles.subitemActivo : ""}`}
-                onClick={() => setPos(null)}
-              >
-                {s.etiqueta}
-              </NavLink>
+            <li key={s.etiqueta}>
+              {s.to == null ? (
+                <span className={`${styles.subitem} ${styles.subitemOff}`} aria-disabled="true">
+                  {s.etiqueta}
+                  <span className={styles.subitemNota}>Próximamente</span>
+                </span>
+              ) : (
+                <NavLink
+                  to={s.to}
+                  className={`${styles.subitem} ${s.to === vigente ? styles.subitemActivo : ""}`}
+                  aria-current={s.to === vigente ? "page" : undefined}
+                  onClick={() => setPos(null)}
+                >
+                  {s.etiqueta}
+                </NavLink>
+              )}
             </li>
           ))}
         </ul>
@@ -87,10 +123,45 @@ export interface TopNavProps {
   onBuscar?: () => void;
 }
 
+/** Todas las opciones del módulo donde estás, a la vista y sin desplegar nada. */
+function BarraModulo({ item, pathname }: { item: ItemNav; pathname: string }) {
+  const opciones = item.submenu ?? [];
+  const vigente = opcionVigente(opciones, pathname);
+  const enlace = (o: OpcionModulo) =>
+    o.to == null ? (
+      <span key={o.etiqueta} className={`${styles.moduloItem} ${styles.moduloOff}`} aria-disabled="true" title="Próximamente">
+        {o.etiqueta}
+      </span>
+    ) : (
+      <Link
+        key={o.to}
+        to={o.to}
+        className={`${o.accion ? styles.moduloAccion : styles.moduloItem} ${o.to === vigente ? styles.moduloActivo : ""}`}
+        aria-current={o.to === vigente ? "page" : undefined}
+      >
+        {o.accion && <span aria-hidden="true">+</span>}
+        {o.etiqueta}
+      </Link>
+    );
+  const consultas = opciones.filter((o) => !o.accion);
+  const acciones = opciones.filter((o) => o.accion);
+
+  return (
+    <div className={styles.filaModuloWrap}>
+      <nav className={styles.filaModulo} aria-label={`Opciones de ${item.etiqueta}`}>
+        <span className={styles.moduloNombre}>{item.etiqueta}</span>
+        <div className={styles.moduloLista}>{consultas.map(enlace)}</div>
+        {acciones.length > 0 && <div className={styles.moduloAcciones}>{acciones.map(enlace)}</div>}
+      </nav>
+    </div>
+  );
+}
+
 /**
  * Header de dos filas. Es el armazón de la aplicación: no hay sidebar.
  *
  * Fila 1: marca, navegación horizontal y usuario.
+ * Barra del módulo: todas sus opciones, cuando el módulo tiene submenú.
  * Fila 2: alcance de la consulta — taller, periodo y buscador.
  *
  * Ambas filas se centran a `--content-max`.
@@ -108,6 +179,9 @@ export function TopNav({
   const { pathname } = useLocation();
   const activoExtra = (it: ItemNav) =>
     it.tambienEn?.some((ruta) => matchPath({ path: ruta, end: false }, pathname) != null) ?? false;
+  const modulo = items.find(
+    (it) => !it.proximamente && ((it.to != null && coincide(it.to, pathname)) || activoExtra(it))
+  );
 
   const enlace = (it: ItemNav, to: string) => (
     <NavLink
@@ -138,7 +212,19 @@ export function TopNav({
 
         <nav className={styles.nav} aria-label="Navegación principal">
           {items.map((it) =>
-            it.proximamente || !it.to ? (
+            // Agrupador sin pantalla propia: solo abre sus opciones.
+            !it.to && it.submenu ? (
+              <ConSubmenu key={it.etiqueta} item={it}>
+                <button
+                  type="button"
+                  className={`${styles.item} ${styles.itemGrupo} ${activoExtra(it) ? styles.activo : ""}`}
+                  aria-haspopup="true"
+                >
+                  {activoExtra(it) && <span className={styles.punto} />}
+                  <span className={styles.label}>{it.etiqueta}</span>
+                </button>
+              </ConSubmenu>
+            ) : it.proximamente || !it.to ? (
               <span
                 key={it.etiqueta}
                 className={`${styles.item} ${styles.off}`}
@@ -174,6 +260,8 @@ export function TopNav({
           </button>
         </div>
       </div>
+
+      {modulo?.submenu && <BarraModulo item={modulo} pathname={pathname} />}
 
       <div className={styles.fila2wrap}>
         <div className={styles.fila2}>
