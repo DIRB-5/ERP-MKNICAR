@@ -168,7 +168,7 @@ export const ordenServicioRepoMemoria: OrdenServicioRepo = {
       kilometrajeIngreso: recepcion?.kilometraje ?? null,
       clienteTipo: buscarCliente(os.clienteId)?.tipo ?? null,
       tipoIngreso: os.tipoIngreso,
-      motivoReportado: os.motivoReportado,
+      motivosReportados: os.motivosReportados,
       historial: historialEstados.get(folio) ?? [],
       expediente: expedientesOS.get(folio) ?? {
         presupuesto: null,

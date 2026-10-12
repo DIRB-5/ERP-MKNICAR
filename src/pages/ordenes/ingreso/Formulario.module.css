@@ -156,6 +156,7 @@
 
 .motivo { grid-column: 1 / -1; }
 .motivo dd { font-weight: 400; font-style: italic; }
+.motivoLista { margin: 0; padding-left: var(--space-5); }
 
 .pie {
   position: sticky;

@@ -119,8 +119,14 @@ export function Component() {
           <dd>{orden.tallerId}</dd>
         </div>
         <div className={f.motivo}>
-          <dt>Motivo reportado por el cliente</dt>
-          <dd>“{orden.motivoReportado}”</dd>
+          <dt>Motivos reportados por el cliente</dt>
+          <dd>
+            <ol className={f.motivoLista}>
+              {orden.motivosReportados.map((m, i) => (
+                <li key={`${i}-${m}`}>“{m}”</li>
+              ))}
+            </ol>
+          </dd>
         </div>
       </Surface>
 

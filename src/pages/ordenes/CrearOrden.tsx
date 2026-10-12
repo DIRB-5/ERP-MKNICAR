@@ -43,7 +43,7 @@ export function Component() {
 
   // Salir a registrar la unidad pierde lo capturado: se confirma solo si hay algo.
   const hayCaptura = Boolean(
-    estado.cliente || estado.motivo.trim() || estado.tipoServicio || estado.programadaPara || estado.entrega
+    estado.cliente || estado.motivos.length > 0 || estado.motivoBorrador.trim() || estado.tipoServicio || estado.programadaPara || estado.entrega
   );
   const irARegistrarUnidad = () =>
     navigate(`/unidades/nueva?desde=os${estado.cliente ? `&cliente=${encodeURIComponent(estado.cliente.id)}` : ""}`);

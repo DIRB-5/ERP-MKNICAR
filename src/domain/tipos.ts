@@ -172,7 +172,7 @@ export interface Recoleccion {
 /**
  * La O.S. al abrirse NO sabe qué tiene el vehículo: es el contenedor donde
  * después cabrá el diagnóstico (estado `en_diagnostico`, lo hace un técnico).
- * Al abrir solo se captura el motivo que reporta el cliente, en sus palabras.
+ * Al abrir solo se capturan los motivos que reporta el cliente, en sus palabras.
  */
 export interface OrdenServicio {
   folio: string;
@@ -181,8 +181,11 @@ export interface OrdenServicio {
   tallerId: string;
   tipoIngreso: TipoIngreso;
   tipoServicio: TipoServicio;
-  /** Lo que dijo el cliente ("hace un ruido al frenar"), nunca un diagnóstico. */
-  motivoReportado: string;
+  /**
+   * Lo que dijo el cliente, un motivo por renglón ("hace un ruido al frenar",
+   * "se prende el testigo del motor"), nunca un diagnóstico. Al menos uno.
+   */
+  motivosReportados: string[];
   prioridad: PrioridadOS;
   /** null si el cliente aún no tiene contactos: no se bloquea el ingreso. */
   contactoSolicitaId: string | null;
@@ -898,7 +901,7 @@ export interface DetalleOS {
   kilometrajeIngreso: number | null;
   clienteTipo: TipoCliente | null;
   tipoIngreso: TipoIngreso;
-  motivoReportado: string;
+  motivosReportados: string[];
   historial: TramoEstado[];
   /** Presupuesto, compras y mano de obra ligados a la O.S. */
   expediente: ExpedienteOS;

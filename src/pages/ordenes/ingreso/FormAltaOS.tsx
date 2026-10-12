@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Campo, Input, Select, SoloLectura, Textarea } from "@/components/Campo/Campo";
+import { Campo, Input, Select, SoloLectura } from "@/components/Campo/Campo";
 import { Buscador, type OpcionBusqueda } from "@/components/Buscador/Buscador";
 import { Button } from "@/components/Button/Button";
 import { Aviso } from "@/components/Aviso/Aviso";
 import { Folio } from "@/components/Folio/Folio";
 import { Estado } from "@/components/Estado/Estado";
+import { ListaMotivos } from "@/components/ListaMotivos/ListaMotivos";
 import { fecha, numero } from "@/domain/format";
 import type {
   CanalContacto,
@@ -47,7 +48,9 @@ export interface EstadoAlta {
   entrega: string;
   recoleccion: { direccion: string; fechaHora: string; contactoEnSitio: string };
   tipoServicio: TipoServicio | "";
-  motivo: string;
+  motivos: string[];
+  /** Motivo escrito y aún no agregado: al guardar cuenta como uno más. */
+  motivoBorrador: string;
   prioridad: PrioridadOS;
   esRetrabajo: boolean;
   osPadre: OrdenHistorial | null;
@@ -80,7 +83,8 @@ export const altaInicial = (tallerId: string): EstadoAlta => ({
   entrega: "",
   recoleccion: { direccion: "", fechaHora: "", contactoEnSitio: "" },
   tipoServicio: "",
-  motivo: "",
+  motivos: [],
+  motivoBorrador: "",
   prioridad: "normal",
   esRetrabajo: false,
   osPadre: null,
@@ -88,6 +92,10 @@ export const altaInicial = (tallerId: string): EstadoAlta => ({
   contactoAutorizaId: "",
   canal: "correo",
 });
+
+/** Los agregados más lo que quedó escrito sin pulsar "Agregar". */
+export const motivosDe = (e: EstadoAlta): string[] =>
+  [...e.motivos, e.motivoBorrador].map((m) => m.trim()).filter(Boolean);
 
 export interface RevisionAlta {
   errores: Partial<Record<CampoAlta, string>>;
@@ -106,7 +114,7 @@ export function revisarAlta(e: EstadoAlta, modo: ModoAlta): RevisionAlta {
   if (!e.unidad) errores.unidad = "Elige la unidad o regístrala.";
   if (!e.tallerId) errores.tallerId = "Elige el taller.";
   if (!e.tipoServicio) errores.tipoServicio = "Elige el tipo de servicio.";
-  if (!e.motivo.trim()) errores.motivo = "Escribe lo que reporta el cliente.";
+  if (motivosDe(e).length === 0) errores.motivo = "Agrega al menos un motivo de lo que reporta el cliente.";
 
   if (modo === "programada") {
     if (e.tipoIngreso === "cita" && !e.programadaPara) errores.programadaPara = "Indica la fecha de la cita.";
@@ -164,7 +172,7 @@ export function aDatosAlta(e: EstadoAlta, modo: ModoAlta): DatosAltaOS {
     tallerId: e.tallerId,
     tipoIngreso: modo === "directo" ? "directo" : e.tipoIngreso,
     tipoServicio: e.tipoServicio as TipoServicio,
-    motivoReportado: e.motivo.trim(),
+    motivosReportados: motivosDe(e),
     prioridad: e.prioridad,
     contactoSolicitaId: e.contactoSolicitaId || null,
     contactoAutorizaId: e.contactoAutorizaId || null,
@@ -524,17 +532,21 @@ export function FormAltaOS({ modo, estado: e, onCambiar, errores }: Props) {
           </SoloLectura>
         </div>
         <Campo
-          etiqueta="Motivo reportado por el cliente"
+          etiqueta="Motivos reportados por el cliente"
           obligatorio
           error={errores.motivo}
-          ayuda="Escribe lo que dijo el cliente, con sus palabras. El diagnóstico lo hace el técnico después."
+          ayuda="Un motivo por renglón, con las palabras del cliente. Enter para agregar. El diagnóstico lo hace el técnico después."
         >
           {(c) => (
-            <Textarea
-              {...c}
-              placeholder={'Por ejemplo: "Hace un ruido al frenar" o "se prende el testigo del motor en carretera"'}
-              value={e.motivo}
-              onChange={(x) => set("motivo", x.target.value)}
+            <ListaMotivos
+              id={c.id}
+              descritoPor={c["aria-describedby"]}
+              invalido={c["aria-invalid"]}
+              placeholder={'Por ejemplo: "Hace un ruido al frenar"'}
+              motivos={e.motivos}
+              onCambiar={(m, b) => onCambiar({ ...e, motivos: m, motivoBorrador: b })}
+              borrador={e.motivoBorrador}
+              onBorrador={(t) => set("motivoBorrador", t)}
             />
           )}
         </Campo>

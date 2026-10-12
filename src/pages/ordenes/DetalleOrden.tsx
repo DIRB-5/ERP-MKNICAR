@@ -228,8 +228,16 @@ export function Component() {
             {pestana === "resumen" && (
               <div className={s.resumen}>
                 <section aria-labelledby="motivo">
-                  <h3 id="motivo" className={s.subtitulo}>Motivo reportado por el cliente</h3>
-                  {d ? <blockquote className={s.motivo}>“{d.motivoReportado}”</blockquote> : <EmptyState />}
+                  <h3 id="motivo" className={s.subtitulo}>Motivos reportados por el cliente</h3>
+                  {d ? (
+                    <ol className={s.motivo}>
+                      {d.motivosReportados.map((m, i) => (
+                        <li key={`${i}-${m}`}>“{m}”</li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <EmptyState />
+                  )}
                 </section>
                 <section aria-labelledby="historial">
                   <h3 id="historial" className={s.subtitulo}>Historial de cambios</h3>

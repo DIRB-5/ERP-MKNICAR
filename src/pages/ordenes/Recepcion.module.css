@@ -20,6 +20,8 @@
   color: var(--ink-muted);
 }
 
+.mas { font-style: normal; font-variant-numeric: tabular-nums; color: var(--ink-subtle); }
+
 .botonPrimario,
 .recibir {
   display: inline-flex;

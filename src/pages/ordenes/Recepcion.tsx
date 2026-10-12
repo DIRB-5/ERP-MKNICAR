@@ -40,8 +40,11 @@ const COLUMNAS: readonly Columna<IngresoEsperado>[] = [
     id: "motivo",
     encabezado: "Motivo reportado",
     celda: (i) => (
-      <span className={styles.motivo} title={i.orden.motivoReportado}>
-        “{resumir(i.orden.motivoReportado)}”
+      <span className={styles.motivo} title={i.orden.motivosReportados.join("\n")}>
+        “{resumir(i.orden.motivosReportados[0] ?? "")}”
+        {i.orden.motivosReportados.length > 1 && (
+          <span className={styles.mas}> y {i.orden.motivosReportados.length - 1} más</span>
+        )}
       </span>
     ),
   },

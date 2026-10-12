@@ -89,7 +89,14 @@
   font-size: 0.875rem;
   font-style: italic;
   color: var(--ink);
+  /* Lista numerada: un motivo por renglón. */
+  padding-left: calc(var(--space-4) + var(--space-5));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
+
+.motivo li::marker { font-style: normal; font-variant-numeric: tabular-nums; color: var(--ink-subtle); }
 
 /* El historial es dato: sólido. */
 .historial {
