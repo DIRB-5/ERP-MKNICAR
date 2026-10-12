@@ -11,11 +11,9 @@ import type {
   ClienteResumen,
   OrdenHistorial,
   OrdenServicio,
-  ExpedienteOS,
-  RecepcionUnidad,
-  TramoEstado,
   UnidadResumen,
 } from "@/domain/tipos";
+import type { EventoOS } from "@/domain/bitacora";
 
 export const clientes: ClienteResumen[] = [];
 export const unidades: UnidadResumen[] = [];
@@ -27,8 +25,8 @@ export const buscarCliente = (id: string): Cliente | null =>
 
 /* Lo que se crea en esta sesión del navegador; se pierde al recargar. */
 export const ordenes: OrdenServicio[] = [];
-export const recepciones: RecepcionUnidad[] = [];
-/** Paso de cada O.S. por la máquina de estados, por folio. */
-export const historialEstados = new Map<string, TramoEstado[]>();
-/** Presupuesto, compras y mano de obra de cada O.S., por folio. */
-export const expedientesOS = new Map<string, ExpedienteOS>();
+/**
+ * Bitácora de cada O.S., por folio. Append-only: de aquí salen el estado, los
+ * tiempos y el expediente completo.
+ */
+export const bitacoras = new Map<string, EventoOS[]>();

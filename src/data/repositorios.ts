@@ -14,7 +14,6 @@ import type {
   DatosAltaUnidad,
   DatosEvaluacion,
   DatosRecepcion,
-  DetalleOS,
   DetalleProducto,
   EstadoCliente,
   EstadoUnidad,
@@ -38,6 +37,9 @@ import type {
   ValorCampo,
 } from "@/domain/tipos";
 import type { DatosProveedor, Proveedor } from "@/domain/tipos/compras";
+import type { EventoOS, EventoPropuesto } from "@/domain/bitacora";
+import type { Expediente } from "@/domain/expediente";
+import type { TipoDocumento } from "@/domain/folios";
 import type { EstadoOS } from "@/domain/estados";
 import type { Area } from "@/domain/areas";
 import type { ClaveCatalogo } from "@/domain/catalogos";
@@ -97,13 +99,25 @@ export interface OrdenServicioRepo {
   ingresoDirecto(alta: DatosAltaOS, recepcion: DatosRecepcion): Promise<OrdenServicio>;
   /** Todo lo que no está cerrada ni rechazada, en el alcance de la sesión. */
   activas(filtros: FiltrosActivas): Promise<OrdenActiva[]>;
-  detalle(folio: string): Promise<DetalleOS | null>;
+
+  /* Expediente: cabecera más bitácora completa. */
+  obtenerExpediente(folio: string): Promise<Expediente | null>;
+  listarEventos(osId: string): Promise<EventoOS[]>;
   /**
-   * Mueve la O.S. a otro estado. La topología la valida `puedeTransicionar`;
-   * quién tiene facultad, el motor de autorizaciones del backend, que puede
-   * rechazar el cambio aunque la topología lo permita.
+   * Agrega un evento a la bitácora. El servidor pone id, sello de tiempo y
+   * usuario, y rechaza lo que no corresponda (sección cerrada, corrección sin
+   * motivo). Nunca se edita ni se borra un evento.
    */
+  registrarEvento(osId: string, evento: EventoPropuesto): Promise<EventoOS>;
+  /**
+   * Propone mover la O.S. a otro estado. El backend decide si es legal: la
+   * topología, las secciones obligatorias y el motor de autorizaciones.
+   */
+  transicionar(osId: string, destino: EstadoOS, carga: { motivo?: string }): Promise<EventoOS>;
+  /** Mismo efecto que `transicionar`; lo usan el selector de estatus y el diálogo de cambio. */
   cambiarEstado(folio: string, a: EstadoOS, comentario: string | null): Promise<void>;
+  /** O.S. a la que pertenece un documento de la cadena (presupuesto, remisión, factura, O.C.). */
+  buscarDocumento(tipo: TipoDocumento, folio: string): Promise<string | null>;
 }
 
 export interface FiltrosActivas {

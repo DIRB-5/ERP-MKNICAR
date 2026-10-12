@@ -8,7 +8,7 @@ export interface Tramo {
   estado: EstadoOS;
   /** Ausente en los estados que todavía no ocurren. */
   desde?: Date;
-  /** Días que duró el tramo. Ausente mientras no termine. */
+  /** Días que duró el tramo, o los que lleva si es el actual. Ausente en los futuros. */
   duracionDias?: number;
   responsable?: string;
 }
@@ -17,18 +17,18 @@ export interface TimelineProps {
   tramos: readonly Tramo[];
   /** Índice del tramo actual. Los posteriores se muestran como futuros. */
   indiceActual: number;
-  resumen: { transcurridoDias: number; productivoDias: number; esperaDias: number };
+  /** Sin resumen, quien usa la línea muestra sus propios tiempos debajo. */
+  resumen?: { transcurridoDias: number; productivoDias: number; esperaDias: number };
 }
 
 /**
  * Recorrido de la O.S. por la máquina de estados.
  *
  * El nodo de un estado completado toma el color del área que lo ejecutó: la
- * línea de tiempo es el diagrama de carriles leído en vertical.
+ * línea de tiempo es el diagrama de carriles leído en vertical. Los tramos de
+ * espera van en ámbar, y solo el nodo actual de una O.S. detenida pulsa.
  */
 export function Timeline({ tramos, indiceActual, resumen }: TimelineProps) {
-  const { transcurridoDias, productivoDias, esperaDias } = resumen;
-  const pctEspera = transcurridoDias > 0 ? (esperaDias / transcurridoDias) * 100 : 0;
 
   return (
     <div>
@@ -36,6 +36,7 @@ export function Timeline({ tramos, indiceActual, resumen }: TimelineProps) {
         {tramos.map((t, i) => {
           const def = ESTADO[t.estado];
           const fase = i < indiceActual ? "done" : i === indiceActual ? "now" : "next";
+          const espera = fase !== "next" && def.espera;
           const detenido = fase === "now" && def.espera;
           return (
             <div
@@ -43,6 +44,7 @@ export function Timeline({ tramos, indiceActual, resumen }: TimelineProps) {
               className={[
                 styles.nodo,
                 styles[fase],
+                espera ? (def.tono === "critico" ? styles.retencion : styles.espera) : "",
                 detenido ? styles.detenido : "",
                 i === tramos.length - 1 ? styles.ultimo : "",
               ]
@@ -58,7 +60,7 @@ export function Timeline({ tramos, indiceActual, resumen }: TimelineProps) {
                   {t.responsable ? ` · ${t.responsable}` : ""}
                 </span>
               </div>
-              <em className={detenido ? styles.malo : undefined}>
+              <em className={espera ? (def.tono === "critico" ? styles.malo : styles.alerta) : undefined}>
                 {t.duracionDias != null ? `${fmtDias(t.duracionDias)} d` : "—"}
               </em>
             </div>
@@ -66,7 +68,16 @@ export function Timeline({ tramos, indiceActual, resumen }: TimelineProps) {
         })}
       </Surface>
 
-      {/* El resumen es obligatorio: es el dato que cambia la conversación. */}
+      {resumen && <Resumen {...resumen} />}
+    </div>
+  );
+}
+
+/* El resumen es el dato que cambia la conversación. */
+function Resumen({ transcurridoDias, productivoDias, esperaDias }: NonNullable<TimelineProps["resumen"]>) {
+  const pctEspera = transcurridoDias > 0 ? (esperaDias / transcurridoDias) * 100 : 0;
+  return (
+    <div>
       <Surface variante="strong" className={styles.resumen} elevacion="none">
         <span>
           Transcurrido <b>{fmtDias(transcurridoDias)} d</b>

@@ -46,9 +46,12 @@
 .done .punto { background: var(--dom); }
 .now .punto { background: var(--dom); }
 
-/* Única animación con significado del sistema. */
+/* Ámbar: tiempo de espera, el que el producto existe para medir. */
+.espera .punto { background: var(--warning); }
+.retencion .punto { background: var(--critical); }
+
+/* Única animación con significado del sistema: solo el nodo actual de una O.S. detenida. */
 .detenido .punto {
-  background: var(--critical);
   animation: pulso-actual 2s ease-in-out infinite;
 }
 
@@ -101,3 +104,7 @@
 .resumen b { color: var(--ink); font-weight: 700; }
 
 .malo { color: var(--critical); }
+.alerta { color: var(--warning); }
+
+/* Sin resumen debajo, la lista cierra sus esquinas. */
+.lista:only-child { border-radius: var(--radius-lg); }

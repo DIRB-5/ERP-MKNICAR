@@ -1,66 +1,115 @@
-import type { ConceptoPresupuesto, ExpedienteOS, PresupuestoOS } from "@/domain/tipos";
+import {
+  eventosDe,
+  vigente,
+  type CargaAutorizacionCliente,
+  type CargaPresupuesto,
+  type EventoDe,
+  type EventoOS,
+} from "@/domain/bitacora";
 import { TASA_IVA } from "@/app/sat";
 
-export const importe = (c: ConceptoPresupuesto) => c.cantidad * c.precioUnitario - c.descuento;
-
-export interface TotalesPresupuesto {
+export interface Totales {
+  servicios: number;
   refacciones: number;
-  manoObra: number;
-  descuentos: number;
-  /** Subtotal ya con descuentos, sin IVA. */
+  /** Sin IVA. */
   subtotal: number;
   iva: number;
   total: number;
-  /** Costo de las refacciones según el presupuesto. */
-  costo: number;
-  /** Subtotal menos costo, como la "Utilidad" del sistema anterior. */
-  utilidad: number;
+  horas: number;
 }
 
-export function totales(p: PresupuestoOS | null): TotalesPresupuesto | null {
-  if (!p) return null;
-  const suma = (f: (c: ConceptoPresupuesto) => number, tipo?: ConceptoPresupuesto["tipo"]) =>
-    p.conceptos.filter((c) => !tipo || c.tipo === tipo).reduce((a, c) => a + f(c), 0);
-  const subtotal = suma(importe);
-  const costo = suma((c) => c.cantidad * c.costo);
+export function totalesVersion(p: CargaPresupuesto): Totales {
+  const servicios = p.servicios.reduce((a, x) => a + x.horas * x.tarifa, 0);
+  const refacciones = p.refacciones.reduce((a, x) => a + x.cantidad * x.precio, 0);
+  const subtotal = servicios + refacciones;
   return {
-    refacciones: suma(importe, "refaccion"),
-    manoObra: suma(importe, "mano_obra"),
-    descuentos: suma((c) => c.descuento),
+    servicios,
+    refacciones,
     subtotal,
     iva: subtotal * TASA_IVA,
     total: subtotal * (1 + TASA_IVA),
-    costo,
-    utilidad: subtotal - costo,
+    horas: p.servicios.reduce((a, x) => a + x.horas, 0),
   };
 }
 
-export interface Trazabilidad {
-  ingreso: number;
-  costoRefacciones: number;
-  /** false cuando aún no hay compra real y se usa el costo del presupuesto. */
-  refaccionesReales: boolean;
-  costoManoObra: number;
-  manoObraFacturada: number;
-  margen: number;
-  margenPct: number | null;
-  margenPresupuestadoPct: number | null;
+export interface VersionPresupuesto {
+  evento: EventoDe<"presupuesto_emitido"> | EventoDe<"adenda_emitida">;
+  carga: CargaPresupuesto;
+  totales: Totales;
+  /** ISO de cuando se envió al cliente; null si aún no sale. */
+  enviadaEn: string | null;
+  respuesta: (CargaAutorizacionCliente & { registradaEn: string; registro: string }) | null;
+  /** Cuánto de esta versión cuenta para el total vigente (sin IVA). */
+  autorizado: number;
 }
 
-export function trazabilidad(e: ExpedienteOS): Trazabilidad | null {
-  const t = totales(e.presupuesto);
-  if (!t) return null;
-  const costoRefacciones = e.costoRefacciones ?? t.costo;
-  const costoManoObra = e.manoObra.reduce((a, m) => a + m.horasReales * m.costoHora, 0);
-  const margen = t.subtotal - costoRefacciones - costoManoObra;
-  return {
-    ingreso: t.subtotal,
-    costoRefacciones,
-    refaccionesReales: e.costoRefacciones != null,
-    costoManoObra,
-    manoObraFacturada: t.manoObra,
-    margen,
-    margenPct: t.subtotal > 0 ? (margen / t.subtotal) * 100 : null,
-    margenPresupuestadoPct: t.subtotal > 0 ? (t.utilidad / t.subtotal) * 100 : null,
-  };
+/** Las versiones se apilan en orden; ninguna sustituye a otra. */
+export function versiones(eventos: readonly EventoOS[]): VersionPresupuesto[] {
+  const emitidas = [...eventosDe(eventos, "presupuesto_emitido"), ...eventosDe(eventos, "adenda_emitida")].sort(
+    (a, b) => a.carga.version - b.carga.version
+  );
+  const solicitudes = eventosDe(eventos, "autorizacion_solicitada");
+  const respuestas = eventosDe(eventos, "autorizacion_cliente");
+  return emitidas.map((e) => {
+    const totales = totalesVersion(e.carga);
+    const r = respuestas.filter((x) => x.carga.version === e.carga.version).at(-1);
+    const respuesta = r ? { ...r.carga, registradaEn: r.en, registro: r.usuarioNombre } : null;
+    const autorizado =
+      respuesta?.resultado === "autorizada"
+        ? totales.subtotal
+        : respuesta?.resultado === "parcial"
+          ? (respuesta.montoAutorizado ?? 0)
+          : 0;
+    return {
+      evento: e,
+      carga: e.carga,
+      totales,
+      enviadaEn: solicitudes.find((x) => x.carga.version === e.carga.version)?.en ?? null,
+      respuesta,
+      autorizado,
+    };
+  });
 }
+
+export interface Autorizado {
+  /** Suma de lo autorizado en todas las versiones, sin IVA. */
+  subtotal: number;
+  servicios: number;
+  refacciones: number;
+  horas: number;
+}
+
+/**
+ * Total vigente: la suma de las versiones autorizadas. Una autorización
+ * parcial reparte su monto entre servicios y refacciones en proporción.
+ */
+export function autorizado(eventos: readonly EventoOS[]): Autorizado {
+  const r: Autorizado = { subtotal: 0, servicios: 0, refacciones: 0, horas: 0 };
+  for (const v of versiones(eventos)) {
+    if (v.autorizado === 0 || v.totales.subtotal === 0) continue;
+    const f = v.autorizado / v.totales.subtotal;
+    r.subtotal += v.autorizado;
+    r.servicios += v.totales.servicios * f;
+    r.refacciones += v.totales.refacciones * f;
+    r.horas += v.totales.horas * f;
+  }
+  return r;
+}
+
+export interface CostoReal {
+  manoObra: number;
+  refacciones: number;
+  total: number;
+  horas: number;
+}
+
+/** Costo incurrido, con las correcciones aplicadas. */
+export function costoReal(eventos: readonly EventoOS[]): CostoReal {
+  const mo = eventosDe(eventos, "mano_obra_cargada").map((e) => vigente(e, eventos).carga);
+  const manoObra = mo.reduce((a, m) => a + m.horas * m.costoHora, 0);
+  const refacciones = eventosDe(eventos, "refaccion_consumida").reduce((a, e) => a + e.carga.cantidad * e.carga.costoUnitario, 0);
+  return { manoObra, refacciones, total: manoObra + refacciones, horas: mo.reduce((a, m) => a + m.horas, 0) };
+}
+
+/** Desviación en porcentaje firmado; null si no hay base contra qué medir. */
+export const desviacion = (real: number, base: number): number | null => (base > 0 ? ((real - base) / base) * 100 : null);

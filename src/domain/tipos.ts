@@ -809,91 +809,11 @@ export interface OrdenActiva {
   entregaComprometida: string | null;
 }
 
-/** Un paso por la máquina de estados, con quién lo movió y por qué. */
-export interface TramoEstado {
-  estado: EstadoOS;
-  /** ISO 8601. */
-  desde: string;
-  /** ISO 8601; null en el estado actual. */
-  hasta: string | null;
-  responsable: string | null;
-  /** Motivo capturado al entrar al estado; obligatorio en retornos. */
-  comentario: string | null;
-}
-
-export interface DetalleOS {
-  resumen: OrdenActiva;
-  vin: string;
-  anio: number;
-  kilometrajeIngreso: number | null;
-  clienteTipo: TipoCliente | null;
-  tipoIngreso: TipoIngreso;
-  motivosReportados: string[];
-  historial: TramoEstado[];
-  /** Presupuesto, compras y mano de obra ligados a la O.S. */
-  expediente: ExpedienteOS;
-}
-
-/* Expediente de la O.S.: lo que la afecta, como en la ventana del sistema anterior */
-
-export type TipoConcepto = "refaccion" | "mano_obra";
-
-export interface ConceptoPresupuesto {
-  id: string;
-  tipo: TipoConcepto;
-  /** Número de parte o clave del servicio. */
-  clave: string;
-  descripcion: string;
-  /** Pieza, juego, servicio, hora… */
-  unidad: string;
-  cantidad: number;
-  /** Costo unitario para MKNICAR. */
-  costo: number;
-  precioUnitario: number;
-  /** Descuento en pesos sobre el importe del renglón. */
-  descuento: number;
-}
-
-export interface PresupuestoOS {
-  folio: string;
-  version: number;
-  /** AAAA-MM-DD. */
-  fecha: string;
-  conceptos: ConceptoPresupuesto[];
-}
-
-export type TipoDocumentoCompra = "requisicion" | "ordenCompra";
-
-export interface DocumentoCompra {
-  tipo: TipoDocumentoCompra;
-  folio: string;
-  proveedor: string | null;
-  /** Estado del documento como lo reporta compras: "En comparativo", "Autorizada"… */
-  estado: string;
-  /** AAAA-MM-DD. */
-  fecha: string;
-  monto: number | null;
-}
-
-export interface ManoObraTecnico {
-  tecnicoId: string;
-  tecnico: string;
-  puesto: string;
-  /** AAAA-MM-DD. */
-  fecha: string;
-  horasEstandar: number;
-  horasReales: number;
-  costoHora: number;
-}
-
-
-export interface ExpedienteOS {
-  presupuesto: PresupuestoOS | null;
-  compras: DocumentoCompra[];
-  manoObra: ManoObraTecnico[];
-  /** Costo real de las refacciones compradas para esta O.S. */
-  costoRefacciones: number | null;
-}
+/*
+ * El historial, el presupuesto, las compras y la mano de obra de una O.S. ya
+ * no son estructuras propias: se derivan de su bitácora (domain/bitacora.ts,
+ * domain/expediente.ts).
+ */
 
 /* ── Catálogos genéricos (ver domain/catalogos.ts) ────────────────── */
 

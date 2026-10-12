@@ -32,6 +32,8 @@ import type {
 import type { EstadoOS } from "@/domain/estados";
 import type { ClaveCatalogo } from "@/domain/catalogos";
 import type { DatosProveedor } from "@/domain/tipos/compras";
+import type { EventoPropuesto } from "@/domain/bitacora";
+import type { TipoDocumento } from "@/domain/folios";
 
 export const useClientes = (f: FiltrosClientes) =>
   useQuery({ queryKey: ["clientes", "lista", f], queryFn: () => clienteRepo.listar(f) });
@@ -210,8 +212,30 @@ export const useComparativo = (folio: string) =>
 export const useOrdenesActivas = (f: FiltrosActivas) =>
   useQuery({ queryKey: ["ordenes", "activas", f], queryFn: () => ordenServicioRepo.activas(f) });
 
-export const useDetalleOS = (folio: string) =>
-  useQuery({ queryKey: ["ordenes", "detalle", folio], queryFn: () => ordenServicioRepo.detalle(folio) });
+export const useExpediente = (folio: string) =>
+  useQuery({ queryKey: ["ordenes", "expediente", folio], queryFn: () => ordenServicioRepo.obtenerExpediente(folio) });
+
+/** Agrega un evento a la bitácora; nunca edita ni borra. */
+export function useRegistrarEvento() {
+  const invalidar = useInvalidar();
+  return useMutation({
+    mutationFn: (v: { osId: string; evento: EventoPropuesto }) => ordenServicioRepo.registrarEvento(v.osId, v.evento),
+    onSuccess: invalidar,
+  });
+}
+
+/** Propone una transición; el backend decide si es legal. */
+export function useTransicionar() {
+  const invalidar = useInvalidar();
+  return useMutation({
+    mutationFn: (v: { osId: string; destino: EstadoOS; motivo?: string }) =>
+      ordenServicioRepo.transicionar(v.osId, v.destino, { motivo: v.motivo }),
+    onSuccess: invalidar,
+  });
+}
+
+export const useDocumentoOS = (tipo: TipoDocumento, folio: string) =>
+  useQuery({ queryKey: ["ordenes", "documento", tipo, folio], queryFn: () => ordenServicioRepo.buscarDocumento(tipo, folio) });
 
 export function useCambiarEstado() {
   const invalidar = useInvalidar();
