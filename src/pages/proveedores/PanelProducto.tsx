@@ -9,7 +9,7 @@ import { useProducto } from "@/data/consultas";
 import { fechaLocal } from "@/app/fechas";
 import { nombreMes } from "@/pages/tesoreria/formato";
 import { DISPONIBILIDAD, TIPO_PRODUCTO } from "./etiquetas";
-import s from "./ProveedoresProductos.module.css";
+import s from "./Productos.module.css";
 
 export function PanelProducto({ id, onCerrar }: { id: string; onCerrar: () => void }) {
   const { data: d, isPending } = useProducto(id);

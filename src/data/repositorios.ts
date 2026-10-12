@@ -9,7 +9,6 @@ import type {
   DatosAltaCliente,
   DatosAltaOS,
   DatosAltaProducto,
-  DatosAltaProveedor,
   DatosAltaRapidaUnidad,
   DatosAltaTecnico,
   DatosAltaUnidad,
@@ -17,9 +16,7 @@ import type {
   DatosRecepcion,
   DetalleOS,
   DetalleProducto,
-  DetalleProveedor,
   EstadoCliente,
-  EstadoProveedor,
   EstadoUnidad,
   ExpedienteUnidad,
   IngresoEsperado,
@@ -29,7 +26,6 @@ import type {
   PerfilTecnico,
   PersonaReceptora,
   Producto,
-  Proveedor,
   RegistroCatalogo,
   RequisicionEnComparativo,
   SaldoProveedor,
@@ -41,6 +37,7 @@ import type {
   UnidadResumen,
   ValorCampo,
 } from "@/domain/tipos";
+import type { DatosProveedor, Proveedor } from "@/domain/tipos/compras";
 import type { EstadoOS } from "@/domain/estados";
 import type { Area } from "@/domain/areas";
 import type { ClaveCatalogo } from "@/domain/catalogos";
@@ -131,25 +128,38 @@ export interface FiltrosProductos {
   tipo?: TipoProducto;
 }
 
-export interface FiltrosProveedores {
-  texto?: string;
-  /** Proveedores que surten esa categoría. */
-  categoriaId?: string;
-  estado?: EstadoProveedor;
-}
-
 export interface CatalogoRepo {
   categorias(): Promise<CategoriaProducto[]>;
   productos(filtros: FiltrosProductos): Promise<Producto[]>;
   producto(id: string): Promise<DetalleProducto | null>;
-  proveedores(filtros: FiltrosProveedores): Promise<Proveedor[]>;
-  proveedor(id: string): Promise<DetalleProveedor | null>;
-  /** Rechaza un RFC que ya exista en el padrón de proveedores. */
-  crearProveedor(datos: DatosAltaProveedor): Promise<Proveedor>;
   /** Rechaza un número de parte que ya exista para la misma marca. */
   crearProducto(datos: DatosAltaProducto): Promise<Producto>;
   crearCategoria(nombre: string): Promise<CategoriaProducto>;
   crearSubcategoria(categoriaId: string, nombre: string): Promise<Subcategoria>;
+}
+
+export interface FiltrosProveedores {
+  /** Razón social, nombre comercial o RFC. */
+  texto?: string;
+  /** Proveedores que surten esa categoría. */
+  categoriaId?: string;
+  /** Sin esto solo regresan los activos. */
+  incluirInactivos?: boolean;
+}
+
+/**
+ * Padrón de proveedores (módulo de compras). Mismas firmas que la API:
+ * la validación de negocio vive en el backend; aquí solo se rechaza el RFC
+ * duplicado para no perder el dato en memoria.
+ */
+export interface ProveedorRepo {
+  listarProveedores(filtros: FiltrosProveedores): Promise<Proveedor[]>;
+  obtenerProveedor(id: string): Promise<Proveedor | null>;
+  crearProveedor(datos: DatosProveedor): Promise<Proveedor>;
+  actualizarProveedor(id: string, datos: DatosProveedor): Promise<Proveedor>;
+  /** Baja lógica: nunca se borra, conserva sus O.C. históricas. */
+  desactivarProveedor(id: string): Promise<Proveedor>;
+  reactivarProveedor(id: string): Promise<Proveedor>;
 }
 
 export interface PersonalRepo {

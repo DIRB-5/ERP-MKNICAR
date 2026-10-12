@@ -6,7 +6,7 @@ import type { Area } from "./areas";
  * pantalla genérica los consume. Un catálogo nuevo se agrega aquí, no con
  * una pantalla nueva.
  *
- * Las pantallas especializadas (Clientes, Unidades, Proveedores y productos)
+ * Las pantallas especializadas (Clientes, Unidades, Proveedores, Productos)
  * conviven con este registro: tienen expediente propio y no son solo listas.
  */
 

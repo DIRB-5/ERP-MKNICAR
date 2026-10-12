@@ -97,7 +97,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.estrellas { letter-spacing: 1px; color: var(--ink); }
 
 /* Panel de detalle */
 .detalle {

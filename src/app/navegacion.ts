@@ -43,10 +43,12 @@ export const NAVEGACION: readonly ItemNav[] = [
     ],
   },
   {
+    // El módulo de compras se llama "Proveedores" en el menú, por decisión del cliente.
     etiqueta: "Proveedores",
-    // Compras vive aquí: la requisición y su comparativo son parte del ciclo con el proveedor.
-    tambienEn: ["/compras", "/requisiciones"],
+    to: "/compras",
+    tambienEn: ["/requisiciones"],
     submenu: [
+      { etiqueta: "Proveedores", to: "/compras/proveedores" },
       { etiqueta: "Órdenes de Compra", proximamente: true },
       { etiqueta: "Conceptos de Órdenes de Compra", proximamente: true },
       { etiqueta: "Comprobantes de Órdenes de Compra", proximamente: true },
@@ -84,12 +86,13 @@ export const NAVEGACION: readonly ItemNav[] = [
   {
     etiqueta: "Catálogos",
     to: "/catalogos",
-    tambienEn: ["/clientes", "/unidades", "/productos", "/proveedores"],
+    tambienEn: ["/clientes", "/unidades", "/productos"],
     submenu: [
       // Las altas no van aquí: cada catálogo tiene su "+ Nuevo" en su pantalla.
       { etiqueta: "Clientes", to: "/clientes" },
       { etiqueta: "Unidades", to: "/unidades" },
-      { etiqueta: "Proveedores", to: "/proveedores" },
+      // El padrón vive en compras; desde aquí también se llega.
+      { etiqueta: "Proveedores", to: "/compras/proveedores" },
       { etiqueta: "Productos", to: "/productos" },
       // Cada catálogo del registro aparece solo: no se da de alta aquí a mano.
       ...Object.values(CATALOGOS).map((c) => ({ etiqueta: c.nombre, to: `/catalogos/${c.clave}` })),

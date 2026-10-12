@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { CategoriaProducto } from "@/domain/tipos";
 import { numero } from "@/domain/format";
-import s from "./ProveedoresProductos.module.css";
+import s from "./Productos.module.css";
 
 interface Props {
   categorias: CategoriaProducto[];

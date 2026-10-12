@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { Navigate, createBrowserRouter } from "react-router-dom";
 import { AppShell } from "./AppShell";
 
 /**
@@ -27,13 +27,17 @@ export const router = createBrowserRouter([
       { path: "catalogos", lazy: () => import("@/pages/catalogos/IndiceCatalogos") },
       { path: "catalogos/:clave", lazy: () => import("@/pages/catalogos/ListaCatalogo") },
       { path: "catalogos/:clave/:id", lazy: () => import("@/pages/catalogos/FormCatalogo") },
-      { path: "productos", lazy: () => import("@/pages/proveedores/ProveedoresProductos") },
+      { path: "productos", lazy: () => import("@/pages/proveedores/Productos") },
       { path: "productos/nuevo", lazy: () => import("@/pages/proveedores/NuevoProducto") },
-      { path: "proveedores", lazy: () => import("@/pages/proveedores/ProveedoresProductos") },
-      { path: "proveedores/nuevo", lazy: () => import("@/pages/proveedores/NuevoProveedor") },
+      // El padrón de proveedores se mudó a compras; las direcciones viejas siguen llegando.
+      { path: "proveedores", element: <Navigate to="/compras/proveedores" replace /> },
+      { path: "proveedores/nuevo", element: <Navigate to="/compras/proveedores?nuevo=1" replace /> },
       { path: "tesoreria", lazy: () => import("@/pages/tesoreria/DashboardFinanciero") },
       { path: "tesoreria/cuentas-por-pagar", lazy: () => import("@/pages/tesoreria/CuentasPorPagar") },
       { path: "tesoreria/cuentas-por-cobrar", lazy: () => import("@/pages/tesoreria/CuentasPorCobrar") },
+      { path: "compras", lazy: () => import("@/pages/compras/IndiceCompras") },
+      { path: "compras/proveedores", lazy: () => import("@/pages/compras/Proveedores") },
+      { path: "compras/proveedores/:id", lazy: () => import("@/pages/compras/ProveedorDetalle") },
       { path: "compras/comparativos", lazy: () => import("@/pages/compras/Comparativos") },
       { path: "requisiciones/:folio", lazy: () => import("@/pages/compras/ComparativoCotizaciones") },
       { path: "personal", lazy: () => import("@/pages/personal/DashboardPersonal") },

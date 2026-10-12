@@ -3,7 +3,6 @@ import type {
   DatosAltaCliente,
   DatosAltaOS,
   DatosAltaProducto,
-  DatosAltaProveedor,
   DatosAltaTecnico,
   DatosEvaluacion,
   DatosAltaRapidaUnidad,
@@ -18,6 +17,7 @@ import {
   compraRepo,
   ordenServicioRepo,
   personalRepo,
+  proveedorRepo,
   tesoreriaRepo,
   unidadRepo,
 } from "./index";
@@ -31,6 +31,7 @@ import type {
 } from "./repositorios";
 import type { EstadoOS } from "@/domain/estados";
 import type { ClaveCatalogo } from "@/domain/catalogos";
+import type { DatosProveedor } from "@/domain/tipos/compras";
 
 export const useClientes = (f: FiltrosClientes) =>
   useQuery({ queryKey: ["clientes", "lista", f], queryFn: () => clienteRepo.listar(f) });
@@ -128,7 +129,7 @@ export const useCuentasPorPagar = (alcance: string) =>
 export const useCuentasPorCobrar = (alcance: string) =>
   useQuery({ queryKey: ["tesoreria", "cxc", alcance], queryFn: () => tesoreriaRepo.cuentasPorCobrar(alcance) });
 
-/* ── Catálogo de proveedores y productos ─────────────────────────── */
+/* ── Catálogo de productos y categorías ──────────────────────────── */
 
 export const useCategorias = () =>
   useQuery({ queryKey: ["catalogo", "categorias"], queryFn: () => catalogoRepo.categorias() });
@@ -138,20 +139,6 @@ export const useProductos = (f: FiltrosProductos) =>
 
 export const useProducto = (id: string) =>
   useQuery({ queryKey: ["catalogo", "producto", id], queryFn: () => catalogoRepo.producto(id), enabled: id !== "" });
-
-export const useProveedores = (f: FiltrosProveedores) =>
-  useQuery({ queryKey: ["catalogo", "proveedores", f], queryFn: () => catalogoRepo.proveedores(f) });
-
-export const useProveedor = (id: string) =>
-  useQuery({ queryKey: ["catalogo", "proveedor", id], queryFn: () => catalogoRepo.proveedor(id), enabled: id !== "" });
-
-export function useCrearProveedor() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (d: DatosAltaProveedor) => catalogoRepo.crearProveedor(d),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["catalogo"] }),
-  });
-}
 
 function useInvalidarCatalogo() {
   const qc = useQueryClient();
@@ -259,5 +246,41 @@ export function useCambiarActivo(c: ClaveCatalogo) {
     mutationFn: (v: { id: string; activo: boolean }) => catalogoGenericoRepo.cambiarActivo(c, v.id, v.activo),
     // "all": también recarga la lista aunque no esté en pantalla, para no mostrarla vieja al volver.
     onSuccess: () => qc.invalidateQueries({ queryKey: ["catalogos", c], refetchType: "all" }),
+  });
+}
+
+/* ── Compras: padrón de proveedores ──────────────────────────────── */
+
+export const useProveedores = (f: FiltrosProveedores) =>
+  useQuery({ queryKey: ["proveedores", "lista", f], queryFn: () => proveedorRepo.listarProveedores(f) });
+
+export const useProveedor = (id: string) =>
+  useQuery({ queryKey: ["proveedores", "uno", id], queryFn: () => proveedorRepo.obtenerProveedor(id), enabled: id !== "" });
+
+/** Cualquier cambio a un proveedor refresca el padrón y el catálogo de productos, que lo muestra. */
+function useInvalidarProveedores() {
+  const qc = useQueryClient();
+  return () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: ["proveedores"], refetchType: "all" }),
+      qc.invalidateQueries({ queryKey: ["catalogo"] }),
+    ]);
+}
+
+export function useGuardarProveedor() {
+  const invalidar = useInvalidarProveedores();
+  return useMutation({
+    mutationFn: (v: { id: string | null; datos: DatosProveedor }) =>
+      v.id ? proveedorRepo.actualizarProveedor(v.id, v.datos) : proveedorRepo.crearProveedor(v.datos),
+    onSuccess: invalidar,
+  });
+}
+
+export function useCambiarActivoProveedor() {
+  const invalidar = useInvalidarProveedores();
+  return useMutation({
+    mutationFn: (v: { id: string; activo: boolean }) =>
+      v.activo ? proveedorRepo.reactivarProveedor(v.id) : proveedorRepo.desactivarProveedor(v.id),
+    onSuccess: invalidar,
   });
 }

@@ -1,16 +1,15 @@
 /*
- * Repositorio del catálogo de proveedores y productos en memoria.
+ * Repositorio del catálogo de productos y categorías en memoria.
  * SE BORRA CUANDO EXISTA LA API.
  *
  * Arranca vacío a propósito (CLAUDE.md, regla 8): ni categorías ni productos
  * de ejemplo. Lo que se registra en la sesión vive aquí hasta recargar.
  */
-import type { CategoriaProducto, DetalleProducto, DetalleProveedor } from "@/domain/tipos";
-import { REGIMEN_FISCAL, USO_CFDI } from "@/app/sat";
+import type { CategoriaProducto, DetalleProducto } from "@/domain/tipos";
 import type { CatalogoRepo } from "../repositorios";
+import { proveedorPorId } from "./proveedores";
 
 const categorias: CategoriaProducto[] = [];
-const proveedores: DetalleProveedor[] = [];
 const productos: DetalleProducto[] = [];
 
 const normal = (t: string) => t.trim().toLowerCase();
@@ -35,51 +34,6 @@ export const catalogoRepoMemoria: CatalogoRepo = {
   async producto(id) {
     return productos.find((d) => d.producto.id === id) ?? null;
   },
-  async proveedores(f) {
-    const texto = f.texto?.trim().toLowerCase();
-    const categoria = categorias.find((c) => c.id === f.categoriaId)?.nombre;
-    return proveedores
-      .map((d) => d.proveedor)
-      .filter(
-        (p) =>
-          (!f.estado || p.estado === f.estado) &&
-          (!categoria || p.categorias.includes(categoria)) &&
-          (!texto || p.razonSocial.toLowerCase().includes(texto) || p.rfc.toLowerCase().includes(texto))
-      );
-  },
-  async proveedor(id) {
-    return proveedores.find((d) => d.proveedor.id === id) ?? null;
-  },
-  async crearProveedor(d) {
-    const rfc = d.rfc.trim().toUpperCase();
-    const existente = proveedores.find((x) => x.proveedor.rfc === rfc);
-    if (existente) throw new Error(`El RFC ${rfc} ya está registrado a nombre de ${existente.proveedor.razonSocial}.`);
-    const proveedor = {
-      id: crypto.randomUUID(),
-      razonSocial: d.razonSocial,
-      rfc,
-      categorias: categorias.filter((c) => d.categoriaIds.includes(c.id)).map((c) => c.nombre),
-      productos: 0,
-      creditoDias: d.creditoDias,
-      entregaPromedioDias: 0,
-      cumplimiento: 0,
-      comprasAnio: 0,
-      calificacion: 0,
-      estado: "activo" as const,
-    };
-    proveedores.push({
-      proveedor,
-      regimenFiscal: `${d.regimenFiscal} · ${REGIMEN_FISCAL[d.regimenFiscal] ?? ""}`,
-      usoCfdi: `${d.usoCfdi} · ${USO_CFDI[d.usoCfdi] ?? ""}`,
-      domicilioFiscal: `${d.domicilioFiscal}, C.P. ${d.codigoPostal}`,
-      datosBancarios: d.datosBancarios,
-      contactos: d.contactos,
-      devoluciones: 0,
-      ordenes: [],
-    });
-    return proveedor;
-  },
-
   async crearProducto(d) {
     const parte = d.numeroParte.trim().toUpperCase();
     if (productos.some((x) => x.producto.numeroParte === parte && normal(x.producto.marca) === normal(d.marca))) {
@@ -91,7 +45,7 @@ export const catalogoRepoMemoria: CatalogoRepo = {
     const hoy = new Date().toISOString().slice(0, 10);
 
     const precios = d.precios.flatMap((x) => {
-      const prov = proveedores.find((p) => p.proveedor.id === x.proveedorId)?.proveedor;
+      const prov = proveedorPorId(x.proveedorId);
       return prov
         ? [{ proveedor: { id: prov.id, nombre: prov.razonSocial }, precio: x.precio, fecha: hoy, entregaDias: x.entregaDias, disponibilidad: x.disponibilidad }]
         : [];
@@ -118,11 +72,10 @@ export const catalogoRepoMemoria: CatalogoRepo = {
 
     categoria.total += 1;
     if (subcategoria) subcategoria.total += 1;
+    // Quien cotiza un producto surte su categoría.
     for (const x of precios) {
-      const p = proveedores.find((v) => v.proveedor.id === x.proveedor.id)?.proveedor;
-      if (!p) continue;
-      p.productos += 1;
-      if (!p.categorias.includes(categoria.nombre)) p.categorias.push(categoria.nombre);
+      const p = proveedorPorId(x.proveedor.id);
+      if (p && !p.categoriaIds.includes(categoria.id)) p.categoriaIds.push(categoria.id);
     }
     return producto;
   },

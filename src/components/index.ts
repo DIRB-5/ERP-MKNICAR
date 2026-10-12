@@ -42,5 +42,6 @@ export type { BuscadorProps, OpcionBusqueda } from "./Buscador/Buscador";
 export { NivelCombustible } from "./NivelCombustible/NivelCombustible";
 export { ListaDanos } from "./ListaDanos/ListaDanos";
 export { ListaMotivos } from "./ListaMotivos/ListaMotivos";
+export { PanelLateral } from "./PanelLateral/PanelLateral";
 export { CargaFotos } from "./CargaFotos/CargaFotos";
 export { MarcadorFirma } from "./MarcadorFirma/MarcadorFirma";

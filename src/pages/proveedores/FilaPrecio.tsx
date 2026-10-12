@@ -4,7 +4,8 @@ import { Campo, Input, Select } from "@/components/Campo/Campo";
 import { Buscador, type OpcionBusqueda } from "@/components/Buscador/Buscador";
 import { Button } from "@/components/Button/Button";
 import { Chip } from "@/components/Chip/Chip";
-import type { Disponibilidad, Proveedor } from "@/domain/tipos";
+import type { Disponibilidad } from "@/domain/tipos";
+import type { Proveedor } from "@/domain/tipos/compras";
 import { useProveedores } from "@/data/consultas";
 import { DISPONIBILIDAD } from "./etiquetas";
 import s from "./NuevoProducto.module.css";
@@ -44,7 +45,7 @@ export function FilaPrecio({ fila, indice, errores, esMejor, onCambiar, onQuitar
   const opciones: OpcionBusqueda[] = proveedores.slice(0, 20).map((p) => ({
     id: p.id,
     etiqueta: p.razonSocial,
-    detalle: `${p.rfc}${p.estado === "suspendido" ? " · Suspendido" : ""} · crédito ${p.creditoDias} días`,
+    detalle: `${p.rfc} · ${p.condicionesPago === "credito" ? `crédito ${p.diasCredito ?? 0} días` : "contado"}`,
   }));
 
   return (
@@ -52,7 +53,6 @@ export function FilaPrecio({ fila, indice, errores, esMejor, onCambiar, onQuitar
       <legend className={s.leyenda}>
         Proveedor {indice + 1}
         {esMejor && <Chip tono="ok">Mejor precio</Chip>}
-        {fila.proveedor?.estado === "suspendido" && <Chip tono="critico">Proveedor suspendido</Chip>}
       </legend>
       <div className={s.filaCampos}>
         <Campo etiqueta="Proveedor" obligatorio error={errores.proveedor}>
@@ -68,7 +68,7 @@ export function FilaPrecio({ fila, indice, errores, esMejor, onCambiar, onQuitar
               onSeleccionar={(o) => onCambiar({ proveedor: proveedores.find((x) => x.id === o?.id) ?? null })}
               sinResultados={
                 <>
-                  No está en el padrón. <Link to="/proveedores/nuevo">Registrar proveedor</Link>
+                  No está en el padrón. <Link to="/compras/proveedores?nuevo=1">Registrar proveedor</Link>
                 </>
               }
             />

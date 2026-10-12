@@ -5,6 +5,7 @@ import type {
   CompraRepo,
   OrdenServicioRepo,
   PersonalRepo,
+  ProveedorRepo,
   TesoreriaRepo,
   UnidadRepo,
 } from "./repositorios";
@@ -16,6 +17,7 @@ import { catalogoRepoMemoria } from "./memoria/catalogo";
 import { personalRepoMemoria } from "./memoria/personal";
 import { compraRepoMemoria } from "./memoria/compras";
 import { catalogoGenericoRepoMemoria } from "./memoria/catalogosGenericos";
+import { proveedorRepoMemoria } from "./memoria/proveedores";
 
 /** Punto único de cambio: cuando exista la API, aquí se conecta su implementación. */
 export const clienteRepo: ClienteRepo = clienteRepoMemoria;
@@ -26,6 +28,7 @@ export const catalogoRepo: CatalogoRepo = catalogoRepoMemoria;
 export const personalRepo: PersonalRepo = personalRepoMemoria;
 export const compraRepo: CompraRepo = compraRepoMemoria;
 export const catalogoGenericoRepo: CatalogoGenericoRepo = catalogoGenericoRepoMemoria;
+export const proveedorRepo: ProveedorRepo = proveedorRepoMemoria;
 
 export type {
   ClienteRepo,
@@ -35,6 +38,7 @@ export type {
   CatalogoRepo,
   PersonalRepo,
   CompraRepo,
+  ProveedorRepo,
   FiltrosActivas,
   FiltrosClientes,
   FiltrosProductos,

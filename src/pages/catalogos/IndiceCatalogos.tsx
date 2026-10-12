@@ -9,7 +9,8 @@ import s from "./CatalogosGenericos.module.css";
 const ESPECIALIZADAS = [
   { to: "/clientes", nombre: "Clientes", descripcion: "Cartera, contactos de autorización y convenio." },
   { to: "/unidades", nombre: "Unidades", descripcion: "Padrón de vehículos, ficha técnica e historial de O.S." },
-  { to: "/productos", nombre: "Proveedores y productos", descripcion: "Refacciones, precios por proveedor y padrón de proveedores." },
+  { to: "/compras/proveedores", nombre: "Proveedores", descripcion: "Padrón, datos fiscales, documentos del SAT y condiciones de pago." },
+  { to: "/productos", nombre: "Productos", descripcion: "Refacciones, categorías y precios por proveedor." },
 ] as const;
 
 export function Component() {

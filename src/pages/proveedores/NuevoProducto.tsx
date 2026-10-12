@@ -165,7 +165,7 @@ export function Component() {
       }}
     >
       <div className={f.migas}>
-        <Link to="/productos">Proveedores y productos</Link> / Nuevo producto
+        <Link to="/productos">Productos</Link> / Nuevo producto
       </div>
       <header>
         <h1 className={f.titulo}>Nuevo producto</h1>
