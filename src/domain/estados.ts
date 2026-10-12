@@ -50,7 +50,8 @@ export const ESTADO: Record<EstadoOS, EstadoDef> = {
   programada:            { label: "Programada",                 area: "operacion",       tono: "activo",  espera: false },
   unidad_recibida:       { label: "Unidad recibida",            area: "operacion",       tono: "activo",  espera: false },
   en_diagnostico:        { label: "En diagnóstico",             area: "operacion",       tono: "activo",  espera: false },
-  requisicion_generada:  { label: "Requisición generada",       area: "operacion",       tono: "activo",  espera: false },
+  // Decisión del cliente (12 oct 2026): en el ciclo de la O.S. se dice "solicitud de refacciones".
+  requisicion_generada:  { label: "Solicitud de refacciones generada", area: "operacion", tono: "activo",  espera: false },
   en_cotizacion:         { label: "En cotización",              area: "abastecimiento",  tono: "activo",  espera: false },
   presupuesto_elaborado: { label: "Presupuesto elaborado",      area: "operacion",       tono: "activo",  espera: false },
   pendiente_autorizacion:{ label: "Pendiente de autorización",  area: "cliente",         tono: "espera",  espera: true  },

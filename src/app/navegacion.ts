@@ -29,7 +29,7 @@ export const NAVEGACION: readonly ItemNav[] = [
     // Agrupa el trabajo comercial y operativo alrededor de la O.S.
     etiqueta: "Operaciones",
     submenu: [
-      { etiqueta: "Cotizaciones", proximamente: true },
+      { etiqueta: "Cotización a cliente", proximamente: true },
       { etiqueta: "Comprobantes", proximamente: true },
       // Misma pantalla que en Tesorería: un solo lugar donde vive el dato.
       { etiqueta: "Cuentas por cobrar", to: "/tesoreria/cuentas-por-cobrar" },

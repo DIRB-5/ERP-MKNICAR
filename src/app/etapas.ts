@@ -15,7 +15,7 @@ export const ETAPAS = [
 export type Etapa = (typeof ETAPAS)[number];
 
 export const ETAPA_LABEL: Record<Etapa, string> = {
-  diagnostico: "Diagnóstico y requisición",
+  diagnostico: "Diagnóstico y solicitud de refacciones",
   cotizacion: "Cotización",
   autorizacion: "Pendiente de autorización",
   compra_pago: "Compra y pago",

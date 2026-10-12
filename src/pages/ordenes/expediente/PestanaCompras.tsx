@@ -7,7 +7,7 @@ import type { DocumentoCompra } from "@/domain/tipos";
 import { fechaLocal } from "@/app/fechas";
 
 const TIPO: Record<DocumentoCompra["tipo"], string> = {
-  requisicion: "Requisición",
+  requisicion: "Solicitud de refacciones",
   ordenCompra: "Orden de compra",
 };
 
@@ -20,7 +20,7 @@ const COLUMNAS: readonly Columna<DocumentoCompra>[] = [
   { id: "monto", encabezado: "Monto", numerica: true, celda: (d) => (d.monto != null ? <Monto valor={d.monto} /> : "—") },
 ];
 
-/** Requisiciones y O.C. que salieron de esta O.S. La requisición abre su comparativo. */
+/** Solicitudes de refacciones y O.C. que salieron de esta O.S. La solicitud abre su comparativo. */
 export function PestanaCompras({ compras }: { compras: DocumentoCompra[] }) {
   return (
     <DataTable
@@ -30,7 +30,7 @@ export function PestanaCompras({ compras }: { compras: DocumentoCompra[] }) {
       claveFila={(d) => d.folio}
       vacio={
         <EmptyState titulo="Sin compras ligadas">
-          La requisición se genera después del diagnóstico; de ahí salen el comparativo y las O.C.
+          La solicitud de refacciones se genera después del diagnóstico; de ahí salen el comparativo y las O.C.
         </EmptyState>
       }
     />
