@@ -68,8 +68,9 @@ export const NAVEGACION: readonly ItemNav[] = [
       { etiqueta: "Cuentas por cobrar", to: "/tesoreria/cuentas-por-cobrar" },
     ],
   },
-  // Antes "Almacén": la unidad de negocio a la que se dirige gasto o utilidad. No es el inventario.
-  { etiqueta: "Unidades de Negocio", proximamente: true },
+  // Antes "Almacén": a donde se dirige gasto o utilidad. No es el inventario.
+  // "Unidad de negocio" queda reservado para las sucursales.
+  { etiqueta: "Centro de costos", proximamente: true },
   { etiqueta: "Facturación", proximamente: true },
   {
     etiqueta: "Personal",
