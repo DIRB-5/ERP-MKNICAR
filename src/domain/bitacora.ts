@@ -19,6 +19,8 @@ export const TIPOS_EVENTO = [
   "hallazgo_agregado",
   "requisicion_generada",
   "requisicion_actualizada",
+  "cotizacion_registrada",
+  "proveedor_elegido",
   "presupuesto_emitido",
   "adenda_emitida",
   "autorizacion_solicitada",
@@ -103,6 +105,10 @@ export interface PartidaRefaccion {
   clave: string;
   cantidad: number;
   precio: number;
+  /** Costo unitario del proveedor elegido; null si se capturó sin cotización. */
+  costo: number | null;
+  /** Foto o PDF que respalda el costo (la cotización del proveedor). */
+  soporte: ArchivoAdjunto | null;
 }
 
 /** Versión 1 es el presupuesto; las siguientes, adendas. Se apilan, nunca se sustituyen. */
@@ -142,6 +148,44 @@ export interface CargaRequisicion {
   folio: string;
   estado: EstadoRequisicion;
   comparativoFolio: string | null;
+}
+
+export type Disponibilidad = "inmediata" | "sobre_pedido" | "agotado";
+
+/**
+ * Lo que respondió un proveedor a la solicitud de refacciones. Una cotización
+ * nueva del mismo proveedor sustituye a la anterior en el comparativo; la
+ * anterior sigue en la bitácora.
+ */
+export interface CargaCotizacion {
+  cotizacionId: string;
+  proveedorId: string;
+  proveedorNombre: string;
+  partidas: {
+    /** Pieza de la solicitud (ver `piezasSolicitadas`). */
+    piezaId: string;
+    /** Sin IVA, por unidad. */
+    precioUnitario: number;
+    disponibilidad: Disponibilidad;
+    /** Días para surtir cuando no es inmediata. */
+    diasEntrega: number | null;
+  }[];
+  /** AAAA-MM-DD; null si el proveedor no la dio. */
+  vigenciaHasta: string | null;
+  notas: string;
+  /** Foto o PDF de la cotización que mandó el proveedor. Pasa al presupuesto con cada pieza elegida. */
+  soporte: ArchivoAdjunto | null;
+}
+
+/** Proveedor elegido para una pieza. La adjudicación es por pieza, no por cotización completa. */
+export interface CargaProveedorElegido {
+  piezaId: string;
+  cotizacionId: string;
+  proveedorId: string;
+  proveedorNombre: string;
+  precioUnitario: number;
+  /** Obligatoria cuando no se elige la oferta más barata. */
+  justificacion: string | null;
 }
 
 export interface CargaOC {
@@ -229,6 +273,8 @@ export interface CargasEvento {
   hallazgo_agregado: CargaHallazgo;
   requisicion_generada: CargaRequisicion;
   requisicion_actualizada: CargaRequisicion;
+  cotizacion_registrada: CargaCotizacion;
+  proveedor_elegido: CargaProveedorElegido;
   presupuesto_emitido: CargaPresupuesto;
   adenda_emitida: CargaPresupuesto;
   autorizacion_solicitada: CargaAutorizacionSolicitada;

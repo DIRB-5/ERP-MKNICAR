@@ -9,7 +9,18 @@
 import { ESTADO, puedeTransicionar, type EstadoOS } from "@/domain/estados";
 import { SERIE, type TipoDocumento } from "@/domain/folios";
 import { eventosDe, type EventoOS, type EventoPropuesto, type MedioAutorizacion } from "@/domain/bitacora";
-import { CAPTURABLES, CAPTURA_FUERA_DE_SECCION, SECCIONES, SECCION_DEL_EVENTO, bloqueoPara, seccionAbierta, ultimaVersion, type Expediente } from "@/domain/expediente";
+import {
+  CAPTURABLES,
+  CAPTURA_FUERA_DE_SECCION,
+  SECCIONES,
+  SECCION_DEL_EVENTO,
+  bloqueoPara,
+  cotizacionesVigentes,
+  piezasSolicitadas,
+  seccionAbierta,
+  ultimaVersion,
+  type Expediente,
+} from "@/domain/expediente";
 import { tramoActual } from "@/domain/tiempos";
 import type { DatosAltaOS, DatosRecepcion, IngresoEsperado, OrdenActiva, OrdenServicio } from "@/domain/tipos";
 import { esTerminal, requiereFormulario, requiereMotivo } from "@/app/transiciones";
@@ -70,6 +81,11 @@ function transicionar(os: OrdenServicio, a: EstadoOS, motivo: string | null, pro
   os.estado = a;
 
   const u = unidades.find((x) => x.unidad.id === os.unidadId);
+
+  // La solicitud de refacciones nace con el estado; sus piezas salen de los hallazgos.
+  if (a === "requisicion_generada" && !eventosDeOS(os.folio).some((e) => e.tipo === "requisicion_generada")) {
+    sellar(os, { tipo: "requisicion_generada", carga: { folio: folioDoc(SERIE.requisicion), estado: "enviada", comparativoFolio: null } });
+  }
 
   // Enviar al cliente es entrar a "pendiente de autorización": ahí arranca la espera #1.
   if (a === "pendiente_autorizacion") {
@@ -261,6 +277,24 @@ export const ordenServicioRepoMemoria: OrdenServicioRepo = {
     const excepcion = CAPTURA_FUERA_DE_SECCION[p.tipo]?.includes(os.estado) ?? false;
     if (seccion && !excepcion && !seccionAbierta(seccion, os.estado)) {
       throw new Error(`${seccion.titulo} está cerrada: para cambiar algo, usa "Corregir".`);
+    }
+
+    if (p.tipo === "cotizacion_registrada") {
+      const piezas = new Set(piezasSolicitadas(eventosDeOS(osId)).map((x) => x.id));
+      if (p.carga.partidas.length === 0) throw new Error("La cotización no trae precios.");
+      if (p.carga.partidas.some((x) => !piezas.has(x.piezaId))) throw new Error("La cotización trae piezas que no están en la solicitud.");
+      if (p.carga.partidas.some((x) => !(x.precioUnitario > 0))) throw new Error("Todo precio cotizado debe ser mayor que cero.");
+    }
+
+    // La elección es por pieza y contra una cotización vigente. Si no es la más barata, se justifica.
+    if (p.tipo === "proveedor_elegido") {
+      const ofertas = cotizacionesVigentes(eventosDeOS(osId)).flatMap((c) =>
+        c.carga.partidas.filter((x) => x.piezaId === p.carga.piezaId).map((x) => ({ cot: c.carga.cotizacionId, precio: x.precioUnitario }))
+      );
+      const elegida = ofertas.find((o) => o.cot === p.carga.cotizacionId);
+      if (!elegida) throw new Error("Ese proveedor no cotizó esta pieza.");
+      const minimo = Math.min(...ofertas.map((o) => o.precio));
+      if (elegida.precio > minimo && !p.carga.justificacion?.trim()) throw new Error("No es la oferta más barata: escribe por qué se elige.");
     }
 
     // Quien libera no puede ser quien reparó.

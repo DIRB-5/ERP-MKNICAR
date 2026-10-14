@@ -410,3 +410,28 @@
 .barraAcciones { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-3); }
 
 .accion { display: flex; flex-direction: column; gap: var(--space-1); max-width: 22rem; }
+
+/* ── Abastecimiento: comparativo y cotización ────────────────────── */
+
+.oferta { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); font-variant-numeric: tabular-nums; }
+
+.filaCotizacion {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(6rem, 1fr) minmax(7rem, 1fr) minmax(5rem, 1fr);
+  gap: var(--space-2);
+  align-items: end;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.piezaCotizada { display: flex; flex-direction: column; gap: var(--space-0\.5); font-size: 0.8125rem; align-self: center; }
+
+@media (max-width: 700px) {
+  .filaCotizacion { grid-template-columns: 1fr; }
+}
+
+/* Soporte del costo: ocupa el renglón completo bajo la partida. */
+.soporte { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: 0.75rem; }
+
+.cotizacionesRecibidas { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); font-size: 0.75rem; }
+.cotizacionesRecibidas li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); }

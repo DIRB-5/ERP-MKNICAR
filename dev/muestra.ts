@@ -22,6 +22,8 @@ import { PUNTOS_CALIDAD } from "@/domain/expediente";
 import { ELEMENTOS_INVENTARIO, type ClienteResumen, type OrdenServicio, type UnidadResumen } from "@/domain/tipos";
 import { fijarSesion } from "@/app/sesion";
 import { bitacoras, clientes, ordenes, unidades } from "@/data/memoria/almacen";
+import { proveedores } from "@/data/memoria/proveedores";
+import type { Proveedor } from "@/domain/tipos/compras";
 
 const HORA = 3_600_000;
 const DIA = 24 * HORA;
@@ -131,7 +133,7 @@ const presupuesto = (
       version,
       folio: `PRE-MUE-${String(100 + version).padStart(4, "0")}-${Math.round(d * 10)}`,
       servicios: servicios.map(([concepto, clave, horas, tarifa]) => ({ concepto, clave, horas, tarifa })),
-      refacciones: refacciones.map(([concepto, clave, cantidad, precio]) => ({ concepto, clave, cantidad, precio })),
+      refacciones: refacciones.map(([concepto, clave, cantidad, precio]) => ({ concepto, clave, cantidad, precio, costo: null, soporte: null })),
       vigenciaHasta: dia(hace(d - 15)),
       motivo,
     },
@@ -144,6 +146,64 @@ const respuesta = (d: number, version: number, resultado: "autorizada" | "rechaz
   paso(d, "autorizacion_cliente", ASESORA, {
     carga: { version, respondidaEn: hace(d).toISOString(), medio: "correo", autorizo: "Laura Muestra", resultado, montoAutorizado: monto, evidencia: null },
   });
+
+/* ── Proveedores y cotizaciones ───────────────────────────────────── */
+
+const PROV_NORTE = { id: "muestra-prov-1", nombre: "Refaccionaria de Muestra Norte" };
+const PROV_AUTO = { id: "muestra-prov-2", nombre: "Autopartes de Muestra" };
+const PROV_DIST = { id: "muestra-prov-3", nombre: "Distribuidora de Muestra" };
+type Prov = typeof PROV_NORTE;
+
+const idCot = (prov: Prov, d: number) => `cot-${prov.id}-${Math.round(d * 10)}`;
+
+/** precios: [pieza, precio unitario, disponibilidad, días de entrega]. */
+const cotizacion = (d: number, prov: Prov, precios: [string, number, "inmediata" | "sobre_pedido", number | null][]) =>
+  paso(d, "cotizacion_registrada", COMPRAS, {
+    carga: {
+      cotizacionId: idCot(prov, d),
+      proveedorId: prov.id,
+      proveedorNombre: prov.nombre,
+      partidas: precios.map(([piezaId, precioUnitario, disponibilidad, diasEntrega]) => ({ piezaId, precioUnitario, disponibilidad, diasEntrega })),
+      vigenciaHasta: null,
+      notas: "",
+      soporte: null,
+    },
+  });
+
+const eleccion = (d: number, piezaId: string, prov: Prov, dCot: number, precio: number, justificacion: string | null = null) =>
+  paso(d, "proveedor_elegido", COMPRAS, {
+    carga: { piezaId, cotizacionId: idCot(prov, dCot), proveedorId: prov.id, proveedorNombre: prov.nombre, precioUnitario: precio, justificacion },
+  });
+
+function proveedorMuestra(prov: Prov, rfc: string, opinionHace: number | null): Proveedor {
+  const hoy = new Date();
+  const fechaOpinion = opinionHace == null ? null : dia(hace(opinionHace));
+  const vigencia = opinionHace == null ? null : dia(new Date(hoy.getTime() - opinionHace * DIA + 30 * DIA));
+  return {
+    id: prov.id,
+    razonSocial: `${prov.nombre} S.A. de C.V.`,
+    nombreComercial: prov.nombre,
+    rfc,
+    regimenFiscal: "601",
+    usoCfdi: "G01",
+    domicilioFiscal: "Domicilio de muestra 100, Toluca, Estado de México",
+    codigoPostal: "50000",
+    correoFacturacion: "facturas@muestra.example",
+    condicionesPago: "credito",
+    diasCredito: 30,
+    limiteCredito: 150_000,
+    moneda: "MXN",
+    categoriaIds: [],
+    tallerIds: [],
+    contactos: [{ nombre: "Vendedor de muestra", puesto: "Ventas", telefono: "5550000100", correo: "ventas@muestra.example" }],
+    datosBancarios: { beneficiario: "", banco: "Banco de muestra", cuenta: "", clabe: "", tarjeta: "", convenio: "", referencia: "", solicita: "", comentarios: "" },
+    documentos:
+      fechaOpinion && vigencia
+        ? [{ id: `${prov.id}-op`, tipo: "opinion_cumplimiento", fechaDocumento: fechaOpinion, vigenciaHasta: vigencia, archivo: null }]
+        : [],
+    activo: true,
+  };
+}
 
 /* ── La O.S. completa: 19 estados, dos retornos, espera de refacción y retención ── */
 
@@ -177,7 +237,10 @@ const CICLO_COMPLETO: Paso[] = [
   cambio(21.2, "requisicion_generada", TECNICO),
   paso(21.2, "requisicion_generada", COMPRAS, { carga: { folio: "REQ-MUE-0100", estado: "enviada", comparativoFolio: null } }),
   cambio(20.5, "en_cotizacion", COMPRAS),
-  paso(19.5, "requisicion_actualizada", COMPRAS, { carga: { folio: "REQ-MUE-0100", estado: "en_comparativo", comparativoFolio: "CMP-MUE-0100" } }),
+  cotizacion(20, PROV_NORTE, [["h1:0", 3350, "inmediata", null]]),
+  cotizacion(19.8, PROV_AUTO, [["h1:0", 3180, "sobre_pedido", 3]]),
+  cotizacion(19.6, PROV_DIST, [["h1:0", 3420, "inmediata", null]]),
+  eleccion(19.2, "h1:0", PROV_NORTE, 20, 3350, "Lo tiene en existencia; el más barato tarda 3 días."),
   cambio(19, "presupuesto_elaborado", ASESORA),
   presupuesto(19, 1, [["Reemplazo de clutch", "MO-CLU", 4, 450]], [["Kit de clutch genérico", "KIT-CLU-G", 1, 4200]]),
   cambio(18.8, "pendiente_autorizacion", ASESORA),
@@ -271,6 +334,13 @@ function momentos(): { estado: EstadoOS; pasos: Paso[] }[] {
 export function cargarMuestra(): void {
   if (clientes.some((c) => c.cliente.id === "muestra-cliente")) return;
   fijarSesion(SESION);
+
+  // Tres proveedores: opinión vigente, vencida y sin opinión.
+  proveedores.push(
+    proveedorMuestra(PROV_NORTE, "RMN010101AB1", 5),
+    proveedorMuestra(PROV_AUTO, "AMU020202CD2", 45),
+    proveedorMuestra(PROV_DIST, "DMU030303EF3", null)
+  );
 
   const cliente: ClienteResumen = {
     cliente: {
@@ -431,8 +501,12 @@ export function cargarMuestra(): void {
         },
       }),
       cambio(9, "requisicion_generada", TECNICO),
-      paso(9, "requisicion_generada", COMPRAS, { carga: { folio: "REQ-MUE-0001", estado: "en_comparativo", comparativoFolio: null } }),
+      paso(9, "requisicion_generada", COMPRAS, { carga: { folio: "REQ-MUE-0001", estado: "enviada", comparativoFolio: null } }),
       cambio(8.6, "en_cotizacion", COMPRAS),
+      cotizacion(8.2, PROV_NORTE, [["h1:0", 1150, "inmediata", null], ["h1:1", 1320, "inmediata", null]]),
+      cotizacion(7.9, PROV_AUTO, [["h1:0", 1090, "inmediata", null], ["h1:1", 1380, "sobre_pedido", 2]]),
+      eleccion(7.5, "h1:0", PROV_AUTO, 7.9, 1090),
+      eleccion(7.5, "h1:1", PROV_NORTE, 8.2, 1320),
       cambio(7, "presupuesto_elaborado", ASESORA),
       presupuesto(7, 1, [["Cambio de balatas y discos delanteros", "MO-FRE", 2, 425]], [["Juego de balatas delanteras", "BAL-DEL-01", 1, 1500], ["Disco de freno delantero", "DIS-DEL-01", 2, 1714]]),
       cambio(6.5, "pendiente_autorizacion", ASESORA),
@@ -471,8 +545,12 @@ export function cargarMuestra(): void {
         },
       }),
       cambio(5.5, "requisicion_generada", TECNICO),
-      paso(5.5, "requisicion_generada", COMPRAS, { carga: { folio: "REQ-MUE-0002", estado: "adjudicada", comparativoFolio: null } }),
+      paso(5.5, "requisicion_generada", COMPRAS, { carga: { folio: "REQ-MUE-0002", estado: "enviada", comparativoFolio: null } }),
       cambio(5.2, "en_cotizacion", COMPRAS),
+      cotizacion(5.1, PROV_NORTE, [["h1:0", 3072, "inmediata", null]]),
+      cotizacion(5, PROV_DIST, [["h1:0", 3190, "inmediata", null]]),
+      cotizacion(4.95, PROV_AUTO, [["h1:0", 3240, "inmediata", null]]),
+      eleccion(4.9, "h1:0", PROV_NORTE, 5.1, 3072),
       cambio(4.8, "presupuesto_elaborado", ASESORA),
       presupuesto(4.8, 1, [["Servicio preventivo de los 140 mil km", "MO-PREV-140", 3, 800]], [["Aceite 15W-40, cubeta 19 L", "ACE-15W40", 1, 4560], ["Filtro de aceite", "FIL-ACE-01", 1, 690]]),
       cambio(4.6, "pendiente_autorizacion", ASESORA),
@@ -553,7 +631,10 @@ export function cargarMuestra(): void {
         },
       }),
       cambio(7.2, "requisicion_generada", TECNICO),
+      paso(7.2, "requisicion_generada", COMPRAS, { carga: { folio: "REQ-MUE-0199", estado: "enviada", comparativoFolio: null } }),
       cambio(6.8, "en_cotizacion", COMPRAS),
+      cotizacion(6.5, PROV_DIST, [["h1:0", 5900, "sobre_pedido", 4]]),
+      eleccion(6.2, "h1:0", PROV_DIST, 6.5, 5900),
       cambio(6, "presupuesto_elaborado", ASESORA),
       presupuesto(6, 1, [["Cambio de compresor y carga de gas", "MO-AC", 3, 450]], [["Compresor de A/C", "COMP-AC", 1, 7800]]),
       cambio(5.8, "pendiente_autorizacion", ASESORA),

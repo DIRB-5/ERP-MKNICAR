@@ -7,7 +7,8 @@
 import type { DatosProveedor, Proveedor } from "@/domain/tipos/compras";
 import type { ProveedorRepo } from "../repositorios";
 
-const proveedores: Proveedor[] = [];
+/** Exportado solo para que la muestra de desarrollo (dev/muestra.ts) pueda llenarlo. */
+export const proveedores: Proveedor[] = [];
 
 const normal = (t: string) => t.trim().toLowerCase();
 

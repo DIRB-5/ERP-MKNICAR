@@ -35,7 +35,7 @@ export interface SeccionExpediente {
 export const SECCIONES: readonly SeccionExpediente[] = [
   { clave: "recepcion", titulo: "Recepción", area: "operacion", nace: "unidad_recibida", cierraEn: "en_diagnostico", obligatoriaPara: null },
   { clave: "diagnostico", titulo: "Diagnóstico", area: "operacion", nace: "en_diagnostico", cierraEn: "presupuesto_elaborado", obligatoriaPara: "requisicion_generada" },
-  { clave: "abastecimiento", titulo: "Abastecimiento", area: "abastecimiento", nace: "requisicion_generada", cierraEn: null, obligatoriaPara: null, soloLectura: true },
+  { clave: "abastecimiento", titulo: "Abastecimiento", area: "abastecimiento", nace: "requisicion_generada", cierraEn: "pendiente_autorizacion", obligatoriaPara: "presupuesto_elaborado" },
   { clave: "presupuesto", titulo: "Presupuesto", area: "operacion", nace: "presupuesto_elaborado", cierraEn: "autorizada_compra", obligatoriaPara: "pendiente_autorizacion" },
   { clave: "autorizacion", titulo: "Autorización del cliente", area: "cliente", nace: "pendiente_autorizacion", cierraEn: "autorizada_compra", obligatoriaPara: "autorizada_compra" },
   { clave: "compra", titulo: "Compra", area: "abastecimiento", nace: "oc_creada", cierraEn: null, obligatoriaPara: null, soloLectura: true },
@@ -54,6 +54,8 @@ export const SECCION_DEL_EVENTO: Partial<Record<TipoEvento, ClaveSeccion>> = {
   hallazgo_agregado: "diagnostico",
   requisicion_generada: "abastecimiento",
   requisicion_actualizada: "abastecimiento",
+  cotizacion_registrada: "abastecimiento",
+  proveedor_elegido: "abastecimiento",
   presupuesto_emitido: "presupuesto",
   adenda_emitida: "presupuesto",
   autorizacion_solicitada: "autorizacion",
@@ -74,6 +76,8 @@ export const SECCION_DEL_EVENTO: Partial<Record<TipoEvento, ClaveSeccion>> = {
 export const CAPTURABLES: readonly TipoEvento[] = [
   "tecnico_asignado",
   "hallazgo_agregado",
+  "cotizacion_registrada",
+  "proveedor_elegido",
   "presupuesto_emitido",
   "adenda_emitida",
   "autorizacion_cliente",
@@ -123,6 +127,47 @@ export function desplegadasPorDefecto(eventos: readonly EventoOS[], actual: Esta
   return r;
 }
 
+/* ── Solicitud de refacciones y cotización ────────────────────────── */
+
+export interface PiezaSolicitada {
+  /** `<hallazgoId>:<n>`: estable mientras el hallazgo exista. */
+  id: string;
+  productoId: string | null;
+  clave: string;
+  descripcion: string;
+  cantidad: number;
+}
+
+/**
+ * Las piezas de la solicitud son las refacciones de los hallazgos: lo que el
+ * diagnóstico registró no se vuelve a capturar.
+ */
+export function piezasSolicitadas(eventos: readonly EventoOS[]): PiezaSolicitada[] {
+  return eventosDe(eventos, "hallazgo_agregado").flatMap((h) =>
+    h.carga.refacciones.map((r, i) => ({
+      id: `${h.carga.hallazgoId}:${i}`,
+      productoId: r.id,
+      clave: r.clave,
+      descripcion: r.descripcion,
+      cantidad: r.cantidad,
+    }))
+  );
+}
+
+/** La cotización vigente de cada proveedor: la más reciente. */
+export function cotizacionesVigentes(eventos: readonly EventoOS[]) {
+  const porProveedor = new Map<string, ReturnType<typeof eventosDe<"cotizacion_registrada">>[number]>();
+  for (const c of eventosDe(eventos, "cotizacion_registrada").sort((a, b) => a.en.localeCompare(b.en))) porProveedor.set(c.carga.proveedorId, c);
+  return [...porProveedor.values()];
+}
+
+/** Proveedor elegido por pieza: la elección más reciente. */
+export function elecciones(eventos: readonly EventoOS[]) {
+  const porPieza = new Map<string, ReturnType<typeof eventosDe<"proveedor_elegido">>[number]>();
+  for (const e of eventosDe(eventos, "proveedor_elegido").sort((a, b) => a.en.localeCompare(b.en))) porPieza.set(e.carga.piezaId, e);
+  return porPieza;
+}
+
 /* ── Requisitos para avanzar ──────────────────────────────────────── */
 
 /** Lo último que se registró después de la entrada más reciente a un estado. */
@@ -156,6 +201,11 @@ export const REQUISITOS: Partial<Record<ClaveSeccion, (eventos: readonly EventoO
     if (eventosDe(ev, "tecnico_asignado").length === 0) faltan.push("asignar al técnico");
     if (eventosDe(ev, "hallazgo_agregado").length === 0) faltan.push("registrar al menos un hallazgo");
     return faltan.length ? `Falta ${faltan.join(" y ")} en Diagnóstico.` : null;
+  },
+  abastecimiento: (ev) => {
+    const elegidas = elecciones(ev);
+    const faltan = piezasSolicitadas(ev).filter((p) => !elegidas.has(p.id)).length;
+    return faltan > 0 ? `Falta elegir proveedor para ${faltan} ${faltan === 1 ? "pieza" : "piezas"} en Abastecimiento.` : null;
   },
   presupuesto: (ev) => {
     const ultima = ultimaVersion(ev);

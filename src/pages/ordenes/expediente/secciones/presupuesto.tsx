@@ -43,13 +43,13 @@ function Version({ v }: { v: VersionPresupuesto }) {
       </header>
       {c.motivo && <p className={s.texto}>Motivo: {c.motivo}</p>}
       <Tabla
-        encabezados={["Partida", "Concepto", "Horas / cant.", "Tarifa / precio", "Importe"]}
+        encabezados={["Partida", "Concepto", "Horas / cant.", "Tarifa / precio", "Importe", "Soporte"]}
         derecha={[2, 3, 4]}
         pie={
           <>
-            <tr><td colSpan={4}>Subtotal</td><td className={s.der}><Monto valor={v.totales.subtotal} escala="tabla" /></td></tr>
-            <tr><td colSpan={4}>IVA</td><td className={s.der}><Monto valor={v.totales.iva} escala="tabla" /></td></tr>
-            <tr><td colSpan={4}>Total</td><td className={s.der}><Monto valor={v.totales.total} escala="tabla" /></td></tr>
+            <tr><td colSpan={4}>Subtotal</td><td className={s.der}><Monto valor={v.totales.subtotal} escala="tabla" /></td><td /></tr>
+            <tr><td colSpan={4}>IVA</td><td className={s.der}><Monto valor={v.totales.iva} escala="tabla" /></td><td /></tr>
+            <tr><td colSpan={4}>Total</td><td className={s.der}><Monto valor={v.totales.total} escala="tabla" /></td><td /></tr>
           </>
         }
       >
@@ -60,6 +60,7 @@ function Version({ v }: { v: VersionPresupuesto }) {
             <td className={s.der}>{numero(x.horas)} h</td>
             <td className={s.der}><Monto valor={x.tarifa} escala="tabla" /></td>
             <td className={s.der}><Monto valor={x.horas * x.tarifa} escala="tabla" /></td>
+            <td className={s.meta}>—</td>
           </tr>
         ))}
         {c.refacciones.map((x, i) => (
@@ -69,6 +70,13 @@ function Version({ v }: { v: VersionPresupuesto }) {
             <td className={s.der}>{numero(x.cantidad)}</td>
             <td className={s.der}><Monto valor={x.precio} escala="tabla" /></td>
             <td className={s.der}><Monto valor={x.cantidad * x.precio} escala="tabla" /></td>
+            <td>
+              {x.soporte ? (
+                <a href={x.soporte.url} target="_blank" rel="noreferrer">{x.soporte.nombre}</a>
+              ) : (
+                <span className={s.meta}>Sin soporte</span>
+              )}
+            </td>
           </tr>
         ))}
       </Tabla>

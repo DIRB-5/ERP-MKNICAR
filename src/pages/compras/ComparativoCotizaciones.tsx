@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { Surface } from "@/components/Surface/Surface";
 import { Panel } from "@/components/Panel/Panel";
 import { EmptyState } from "@/components/EmptyState/EmptyState";
@@ -11,7 +11,7 @@ import { Button } from "@/components/Button/Button";
 import { SegmentedControl } from "@/components/SegmentedControl/SegmentedControl";
 import { fecha, fechaHora, numero } from "@/domain/format";
 import type { ComparativoCotizacion, ConceptoRequisicion, Oferta } from "@/domain/tipos";
-import { useComparativo } from "@/data/consultas";
+import { useComparativo, useDocumentoOS } from "@/data/consultas";
 import { fechaLocal } from "@/app/fechas";
 import { TASA_IVA } from "@/app/sat";
 import { DISPONIBILIDAD } from "@/pages/proveedores/etiquetas";
@@ -303,6 +303,9 @@ function Comparativo({ d }: { d: ComparativoCotizacion }) {
 export function Component() {
   const { folio = "" } = useParams();
   const { data: d, isPending } = useComparativo(folio);
+  // Mientras no exista el módulo de compras, la solicitud se cotiza en el expediente de su O.S.
+  const { data: os, isPending: buscandoOS } = useDocumentoOS("requisicion", folio);
+  if (!isPending && !d && !buscandoOS && os) return <Navigate to={`/ordenes/${encodeURIComponent(os)}#abastecimiento`} replace />;
 
   return (
     <div className={styles.vista}>

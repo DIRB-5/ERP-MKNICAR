@@ -6,10 +6,12 @@ import { PanelLateral } from "@/components/PanelLateral/PanelLateral";
 import { Campo, Input, Textarea } from "@/components/Campo/Campo";
 import { eventosDe, vigente, type CargaPresupuesto, type EventoOS } from "@/domain/bitacora";
 import type { Producto, RegistroCatalogo } from "@/domain/tipos";
-import { ultimaVersion } from "@/domain/expediente";
+import { elecciones, piezasSolicitadas, ultimaVersion } from "@/domain/expediente";
 import { useProductos, useRegistros } from "@/data/consultas";
 import { hoyISO } from "@/app/fechas";
 import { totalesVersion } from "./calculos";
+import { aAdjuntos } from "./captura";
+import type { ArchivoAdjunto } from "@/domain/tipos/compras";
 import f from "@/pages/ordenes/ingreso/Formulario.module.css";
 import s from "./Expediente.module.css";
 
@@ -21,9 +23,29 @@ interface Fila {
   cantidad: string;
   /** Tarifa por hora (servicio) o precio unitario (refacción), sin IVA. */
   precio: string;
+  /** Costo del proveedor elegido; el precio sale de aquí más el margen. */
+  costo: number | null;
+  /** Foto o PDF con el costo de la pieza. */
+  soporte: ArchivoAdjunto | null;
 }
 
-const fila = (concepto = "", codigo = "", cantidad = "1", precio = ""): Fila => ({ clave: crypto.randomUUID(), concepto, codigo, cantidad, precio });
+const fila = (concepto = "", codigo = "", cantidad = "1", precio = "", costo: number | null = null, soporte: ArchivoAdjunto | null = null): Fila => ({
+  clave: crypto.randomUUID(),
+  concepto,
+  codigo,
+  cantidad,
+  precio,
+  costo,
+  soporte,
+});
+
+/**
+ * Margen por defecto sobre el costo de cada pieza. PROVISIONAL: lo confirma el
+ * cliente; el asesor lo ajusta en cada presupuesto.
+ */
+const MARGEN_DEFECTO = 30;
+
+const conMargen = (costo: number, margen: number) => String(Math.round(costo * (1 + margen / 100) * 100) / 100);
 
 const sumarDias = (n: number) => {
   const d = new Date();
@@ -31,9 +53,15 @@ const sumarDias = (n: number) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
-/** La versión 1 nace de los hallazgos del diagnóstico: no se captura dos veces. */
-function desdeHallazgos(eventos: readonly EventoOS[], servicios: RegistroCatalogo[], productos: Producto[]) {
+/**
+ * La versión 1 nace del diagnóstico y del comparativo: los servicios de los
+ * hallazgos y cada pieza al costo del proveedor elegido más el margen. Nada se
+ * captura dos veces.
+ */
+function desdeHallazgos(eventos: readonly EventoOS[], servicios: RegistroCatalogo[], productos: Producto[], margen: number) {
   const hs = eventosDe(eventos, "hallazgo_agregado").map((e) => vigente(e, eventos).carga);
+  const elegidas = elecciones(eventos);
+  const cotizaciones = eventosDe(eventos, "cotizacion_registrada");
   return {
     servicios: hs.flatMap((h) =>
       h.servicios.map((x) => {
@@ -41,12 +69,16 @@ function desdeHallazgos(eventos: readonly EventoOS[], servicios: RegistroCatalog
         return fila(x.descripcion, x.clave, String(x.horas), cat?.valores.precio != null ? String(cat.valores.precio) : "");
       })
     ),
-    refacciones: hs.flatMap((h) =>
-      h.refacciones.map((x) => {
-        const cat = productos.find((p) => p.id === x.id);
-        return fila(x.descripcion, x.clave, String(x.cantidad), cat ? String(cat.precioSugerido) : "");
-      })
-    ),
+    refacciones: piezasSolicitadas(eventos).map((x) => {
+      const elegida = elegidas.get(x.id);
+      if (elegida) {
+        // El soporte del costo es la cotización del proveedor elegido: no se adjunta dos veces.
+        const soporte = cotizaciones.find((c) => c.carga.cotizacionId === elegida.carga.cotizacionId)?.carga.soporte ?? null;
+        return fila(x.descripcion, x.clave, String(x.cantidad), conMargen(elegida.carga.precioUnitario, margen), elegida.carga.precioUnitario, soporte);
+      }
+      const cat = productos.find((p) => p.id === x.productoId);
+      return fila(x.descripcion, x.clave, String(x.cantidad), cat ? String(cat.precioSugerido) : "");
+    }),
   };
 }
 
@@ -72,12 +104,14 @@ export function FormPresupuesto({ abierto, eventos, tallerId, motivoInicial = ""
   const [servicios, setServicios] = useState<Fila[]>([]);
   const [refacciones, setRefacciones] = useState<Fila[]>([]);
   const [vigencia, setVigencia] = useState(sumarDias(15));
+  const [margen, setMargen] = useState(String(MARGEN_DEFECTO));
   const [motivo, setMotivo] = useState(motivoInicial);
   const [intentado, setIntentado] = useState(false);
 
   useEffect(() => {
     if (!abierto) return;
-    const base = esAdenda ? { servicios: [], refacciones: [] } : desdeHallazgos(eventos, catServicios, productos);
+    const base = esAdenda ? { servicios: [], refacciones: [] } : desdeHallazgos(eventos, catServicios, productos, MARGEN_DEFECTO);
+    setMargen(String(MARGEN_DEFECTO));
     setServicios(base.servicios);
     setRefacciones(base.refacciones);
     setVigencia(sumarDias(15));
@@ -90,7 +124,14 @@ export function FormPresupuesto({ abierto, eventos, tallerId, motivoInicial = ""
     version,
     folio: "",
     servicios: servicios.map((x) => ({ concepto: x.concepto.trim(), clave: x.codigo.trim(), horas: Number(x.cantidad) || 0, tarifa: Number(x.precio) || 0 })),
-    refacciones: refacciones.map((x) => ({ concepto: x.concepto.trim(), clave: x.codigo.trim(), cantidad: Number(x.cantidad) || 0, precio: Number(x.precio) || 0 })),
+    refacciones: refacciones.map((x) => ({
+      concepto: x.concepto.trim(),
+      clave: x.codigo.trim(),
+      cantidad: Number(x.cantidad) || 0,
+      precio: Number(x.precio) || 0,
+      costo: x.costo,
+      soporte: x.soporte,
+    })),
     vigenciaHasta: vigencia,
     motivo: motivo.trim(),
   };
@@ -105,7 +146,7 @@ export function FormPresupuesto({ abierto, eventos, tallerId, motivoInicial = ""
   if (!vigencia || vigencia < hoyISO()) errores.push("La vigencia no puede ser anterior a hoy.");
   if (esAdenda && !motivo.trim()) errores.push("La adenda necesita su motivo.");
 
-  const editor = (titulo: string, filas: Fila[], setFilas: (f: Fila[]) => void, cant: string, prec: string) => (
+  const editor = (titulo: string, filas: Fila[], setFilas: (f: Fila[]) => void, cant: string, prec: string, conSoporte = false) => (
     <fieldset className={f.seccion}>
       <legend className={f.seccionTitulo}>{titulo}</legend>
       {filas.length === 0 && <p className={s.meta}>Sin partidas.</p>}
@@ -128,6 +169,23 @@ export function FormPresupuesto({ abierto, eventos, tallerId, motivoInicial = ""
             <Button variante="fantasma" onClick={() => setFilas(filas.filter((y) => y.clave !== x.clave))} aria-label={`Quitar partida ${i + 1}`}>
               Quitar
             </Button>
+            {conSoporte && (
+              <div className={s.soporte}>
+                {x.soporte ? (
+                  <>
+                    <span className={s.meta}>Soporte del costo:</span>{" "}
+                    <a href={x.soporte.url} target="_blank" rel="noreferrer">{x.soporte.nombre}</a>
+                    <Button variante="fantasma" onClick={() => poner({ soporte: null })} aria-label={`Quitar soporte de la partida ${i + 1}`}>
+                      Quitar
+                    </Button>
+                  </>
+                ) : (
+                  <Campo etiqueta="Soporte del costo" ayuda="Foto o PDF de la cotización con el costo de esta pieza.">
+                    {(p) => <Input {...p} type="file" accept="image/*,application/pdf" onChange={(e) => poner({ soporte: aAdjuntos(e.target.files)[0] ?? null })} />}
+                  </Campo>
+                )}
+              </div>
+            )}
           </div>
         );
       })}
@@ -167,7 +225,24 @@ export function FormPresupuesto({ abierto, eventos, tallerId, motivoInicial = ""
         </Campo>
       )}
       {editor("Servicios", servicios, setServicios, "Horas", "Tarifa por hora")}
-      {editor("Refacciones", refacciones, setRefacciones, "Cantidad", "Precio unitario")}
+      {refacciones.some((x) => x.costo != null) && (
+        <Campo etiqueta="Margen sobre costo (%)" ayuda="Recalcula el precio de las piezas que vienen del comparativo.">
+          {(p) => (
+            <Input
+              {...p}
+              inputMode="decimal"
+              className={s.cifra}
+              value={margen}
+              onChange={(e) => {
+                const v = e.target.value.replace(/[^\d.]/g, "");
+                setMargen(v);
+                setRefacciones(refacciones.map((x) => (x.costo != null ? { ...x, precio: conMargen(x.costo, Number(v) || 0) } : x)));
+              }}
+            />
+          )}
+        </Campo>
+      )}
+      {editor("Refacciones", refacciones, setRefacciones, "Cantidad", "Precio unitario", true)}
       <div className={f.rejilla2}>
         <Campo etiqueta="Vigente hasta" obligatorio>
           {(p) => <Input {...p} type="date" min={hoyISO()} value={vigencia} onChange={(e) => setVigencia(e.target.value)} />}
