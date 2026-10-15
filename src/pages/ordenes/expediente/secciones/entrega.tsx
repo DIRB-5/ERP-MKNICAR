@@ -5,11 +5,10 @@ import { Folio } from "@/components/Folio/Folio";
 import { PanelLateral } from "@/components/PanelLateral/PanelLateral";
 import { Campo, Input } from "@/components/Campo/Campo";
 import { eventosDe, vigente } from "@/domain/bitacora";
-import { dias as fmtDias, numero } from "@/domain/format";
-import { tramosPorEstado } from "@/domain/tiempos";
+import { numero } from "@/domain/format";
 import { useRegistrarEvento } from "@/data/consultas";
 import { aInputFechaHora, deInputFechaHora } from "@/app/fechas";
-import { Acciones, Datos, Pendiente, Subtitulo, fh, type PropsSeccion, type ResumenSeccion } from "../comun";
+import { Acciones, Datos, Pendiente, fh, type PropsSeccion, type ResumenSeccion } from "../comun";
 import f from "@/pages/ordenes/ingreso/Formulario.module.css";
 import s from "../Expediente.module.css";
 
@@ -23,11 +22,10 @@ export const resumen: ResumenSeccion = (exp) => {
   return r ? `${r.carga.folio} · entregada a ${vigente(r, exp.eventos).carga.recibeNombre}` : null;
 };
 
-export default function Entrega({ exp, abierta, ahora }: PropsSeccion) {
+export default function Entrega({ exp, abierta }: PropsSeccion) {
   const [registrando, setRegistrando] = useState(false);
   const remision = eventosDe(exp.eventos, "remision_emitida").at(-1);
   const r = remision ? vigente(remision, exp.eventos).carga : null;
-  const retenciones = tramosPorEstado(exp.eventos, ahora).filter((t) => t.estado === "retenida");
 
   return (
     <div className={s.bloques}>
@@ -43,19 +41,6 @@ export default function Entrega({ exp, abierta, ahora }: PropsSeccion) {
             ["Firma", r.firma ? "Firmada" : "Pendiente: el capturador de firma llega en una fase siguiente"],
           ]}
         />
-      )}
-
-      {retenciones.length > 0 && (
-        <div>
-          <Subtitulo>Retención</Subtitulo>
-          {retenciones.map((t) => (
-            <p key={t.desde} className={s.texto}>
-              Retenida desde {fh(t.desde)} por {t.usuarioNombre}: “{t.motivo ?? "sin motivo"}”.{" "}
-              <b className={s.malo}>{fmtDias(t.dias)} d</b>
-              {t.hasta ? ` hasta ${fh(t.hasta)}.` : " y contando."}
-            </p>
-          ))}
-        </div>
       )}
 
       {abierta && !r && (

@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import styles from "./Buscador.module.css";
 
 export interface OpcionBusqueda {
@@ -43,6 +44,8 @@ export function Buscador({
   const [activo, setActivo] = useState(0);
   const idLista = `${id}-lista`;
   const mostrar = abierto && !seleccion && texto.trim().length > 0;
+  const refInput = useRef<HTMLInputElement>(null);
+  const posicion = usePosicionLista(refInput, mostrar);
 
   // El texto va primero y la selección al final: quien usa el buscador suele
   // actualizar su estado completo en cada aviso, y el último gana. Al revés, el
@@ -56,6 +59,7 @@ export function Buscador({
   return (
     <div className={styles.buscador}>
       <input
+        ref={refInput}
         id={id}
         {...aria}
         type="text"
@@ -97,8 +101,10 @@ export function Buscador({
         }}
       />
       {seleccion && <span className={styles.check} aria-hidden="true">✓</span>}
-      {mostrar && (
-        <ul id={idLista} role="listbox" className={styles.lista}>
+      {mostrar &&
+        posicion &&
+        createPortal(
+        <ul id={idLista} role="listbox" className={styles.lista} style={posicion.estilo}>
           {cargando ? (
             <li className={styles.nota}>Buscando…</li>
           ) : opciones.length === 0 ? (
@@ -123,8 +129,54 @@ export function Buscador({
               </li>
             ))
           )}
-        </ul>
-      )}
+        </ul>,
+          posicion.contenedor
+        )}
     </div>
   );
+}
+
+const ALTO_MAXIMO = 256;
+
+/**
+ * La lista se dibuja fuera del formulario: cada superficie de vidrio crea su
+ * propio contexto de apilamiento y la siguiente la tapaba. Va pegada al campo
+ * con posición fija; si abajo no cabe, se abre hacia arriba. Dentro de un
+ * `<dialog>` se monta en el dialog, que vive en la capa superior.
+ */
+function usePosicionLista(ref: RefObject<HTMLInputElement>, abierta: boolean) {
+  const [posicion, setPosicion] = useState<{ estilo: CSSProperties; contenedor: Element } | null>(null);
+
+  useLayoutEffect(() => {
+    const input = ref.current;
+    if (!abierta || !input) {
+      setPosicion(null);
+      return;
+    }
+    const contenedor = input.closest("dialog") ?? document.body;
+    const medir = () => {
+      const r = input.getBoundingClientRect();
+      const abajo = window.innerHeight - r.bottom;
+      const haciaArriba = abajo < ALTO_MAXIMO && r.top > abajo;
+      setPosicion({
+        contenedor,
+        estilo: {
+          left: r.left,
+          width: r.width,
+          ...(haciaArriba ? { bottom: window.innerHeight - r.top + 4 } : { top: r.bottom + 4 }),
+          maxHeight: Math.min(ALTO_MAXIMO, (haciaArriba ? r.top : abajo) - 8),
+        },
+      });
+    };
+    medir();
+    // El formulario hace scroll dentro de su contenedor: se escucha en captura.
+    window.addEventListener("scroll", medir, true);
+    window.addEventListener("resize", medir);
+    return () => {
+      window.removeEventListener("scroll", medir, true);
+      window.removeEventListener("resize", medir);
+    };
+  }, [ref, abierta]);
+
+  return posicion;
 }

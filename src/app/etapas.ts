@@ -1,24 +1,19 @@
+import { ESTADO, type EstadoOS } from "@/domain/estados";
+
 /**
- * Las seis etapas en que se agrupan los estados de la O.S. para tableros y
- * kanban, tal como las muestra el prototipo aprobado. Qué estado cae en qué
- * etapa lo resuelve el backend.
+ * Columnas del kanban y de los tableros: los estatus abiertos de la O.S., en
+ * el orden del ciclo. Con nueve estatus ya no hace falta agruparlos.
  */
 export const ETAPAS = [
+  "programacion",
   "diagnostico",
-  "cotizacion",
-  "autorizacion",
-  "compra_pago",
-  "reparacion",
-  "entrega",
-] as const;
+  "cotizar",
+  "pendiente_autorizacion",
+  "autorizado_compra",
+  "en_reparacion",
+  "remision",
+] as const satisfies readonly EstadoOS[];
 
 export type Etapa = (typeof ETAPAS)[number];
 
-export const ETAPA_LABEL: Record<Etapa, string> = {
-  diagnostico: "Diagnóstico y solicitud de refacciones",
-  cotizacion: "Cotización",
-  autorizacion: "Pendiente de autorización",
-  compra_pago: "Compra y pago",
-  reparacion: "En reparación",
-  entrega: "Entrega y facturación",
-};
+export const ETAPA_LABEL = Object.fromEntries(ETAPAS.map((e) => [e, ESTADO[e].label])) as Record<Etapa, string>;

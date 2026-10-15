@@ -1,7 +1,6 @@
 import { Monto } from "@/components/Monto/Monto";
 import { dias as fmtDias, numero } from "@/domain/format";
-import { desgloseEspera, diasEnEspera, diasTotales, porcentajeEspera } from "@/domain/tiempos";
-import { ESTADO } from "@/domain/estados";
+import { PUNTO_ESPERA, desgloseEspera, diasEnEspera, diasTotales, porcentajeEspera } from "@/domain/tiempos";
 import { autorizado, costoReal, desviacion } from "../calculos";
 import { Subtitulo, Tabla, type PropsSeccion, type ResumenSeccion } from "../comun";
 import s from "../Expediente.module.css";
@@ -48,7 +47,7 @@ export default function Cierre({ exp, ahora }: PropsSeccion) {
         <Tabla encabezados={["Punto de espera", "Días"]} derecha={[1]}>
           {(Object.keys(puntos) as (keyof typeof puntos)[]).map((p) => (
             <tr key={p}>
-              <td>{ESTADO[p].label}</td>
+              <td>{PUNTO_ESPERA[p]}</td>
               <td className={`${s.der} ${puntos[p] > 0 ? s.espera : ""}`}>{fmtDias(puntos[p])} d</td>
             </tr>
           ))}

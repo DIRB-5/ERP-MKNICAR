@@ -7,8 +7,8 @@ import type { EstadoOS, Tono } from "./estados";
  * Igual que en `estados.ts`, aquí vive solo la topología. Quién ejecuta cada
  * transición lo resuelve el motor de autorizaciones del backend.
  *
- * Tono `espera` (ámbar) solo donde coincide con un punto de espera medible de
- * la O.S.: la O.C. en autorización es el punto de Dirección (`autorizacion_oc`).
+ * Tono `espera` (ámbar) solo en los puntos de espera medibles que viven en la
+ * O.C.: en autorización (Dirección) y autorizada, por pagar (Tesorería).
  */
 
 export interface EstadoCompraDef {
@@ -88,9 +88,9 @@ export const ESTADO_OC: Record<EstadoOC, EstadoCompraDef> = {
 };
 
 /**
- * La O.C. rechazada no se corrige: termina aquí y la O.S. regresa a
- * presupuesto por su propio retorno (`autorizacion_oc → presupuesto_elaborado`).
- * La siguiente O.C. sale del presupuesto corregido.
+ * La O.C. rechazada no se corrige: termina aquí y la O.S. regresa a cotizar
+ * por su propio retorno (`autorizado_compra → cotizar`). La siguiente O.C.
+ * sale de la nueva cotización.
  */
 export const TRANSICIONES_OC: Record<EstadoOC, readonly EstadoOC[]> = {
   borrador:          ["en_autorizacion", "cancelada"],
@@ -107,8 +107,8 @@ export const TRANSICIONES_OC: Record<EstadoOC, readonly EstadoOC[]> = {
 
 /** El retorno de la O.S. que corresponde a una O.C. rechazada. Ya existe en `estados.ts`. */
 export const RETORNO_OC_RECHAZADA: { de: EstadoOS; a: EstadoOS } = {
-  de: "autorizacion_oc",
-  a: "presupuesto_elaborado",
+  de: "autorizado_compra",
+  a: "cotizar",
 };
 
 /* ── Comprobante del proveedor (CFDI) ─────────────────────────────── */

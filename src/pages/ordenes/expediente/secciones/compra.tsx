@@ -3,9 +3,8 @@ import { Monto } from "@/components/Monto/Monto";
 import { eventosDe, type CargaOC } from "@/domain/bitacora";
 import { DIAS_BACKORDER, ESTADO_OC } from "@/domain/compras";
 import { dias as fmtDias } from "@/domain/format";
-import { tramosPorEstado, type TramoEstadoOS } from "@/domain/tiempos";
-import type { EstadoOS } from "@/domain/estados";
-import { Pendiente, Subtitulo, Tabla, fh, type PropsSeccion, type ResumenSeccion } from "../comun";
+import { PUNTO_ESPERA, desgloseEspera } from "@/domain/tiempos";
+import { Pendiente, Subtitulo, Tabla, type PropsSeccion, type ResumenSeccion } from "../comun";
 import s from "../Expediente.module.css";
 
 function ordenesCompra(exp: PropsSeccion["exp"]): CargaOC[] {
@@ -14,41 +13,21 @@ function ordenesCompra(exp: PropsSeccion["exp"]): CargaOC[] {
   return [...porFolio.values()];
 }
 
-const tramos = (exp: PropsSeccion["exp"], ahora: string, estado: EstadoOS) =>
-  tramosPorEstado(exp.eventos, ahora).filter((t) => t.estado === estado);
-
 export const resumen: ResumenSeccion = (exp, ahora) => {
   const oc = ordenesCompra(exp);
   if (oc.length === 0) return null;
-  const dir = tramos(exp, ahora, "autorizacion_oc").reduce((a, t) => a + t.dias, 0);
-  const pago = tramos(exp, ahora, "en_proceso_pago").reduce((a, t) => a + t.dias, 0);
-  return `${oc.length} O.C. · Dirección ${fmtDias(dir)} d · pago ${fmtDias(pago)} d`;
+  const d = desgloseEspera(exp.eventos, ahora);
+  return `${oc.length} O.C. · Dirección ${fmtDias(d.direccion)} d · Tesorería ${fmtDias(d.tesoreria)} d · proveedor ${fmtDias(d.proveedor)} d`;
 };
 
-function Esperas({ titulo, lista }: { titulo: string; lista: TramoEstadoOS[] }) {
-  if (lista.length === 0) return null;
-  return (
-    <div>
-      <Subtitulo>{titulo}</Subtitulo>
-      <Tabla encabezados={["Desde", "Hasta", "Movió", "Días"]} derecha={[3]}>
-        {lista.map((t) => (
-          <tr key={t.desde}>
-            <td className={s.cifra}>{fh(t.desde)}</td>
-            <td className={s.cifra}>{t.hasta ? fh(t.hasta) : <span className={s.meta}>sigue abierto</span>}</td>
-            <td>{t.usuarioNombre}</td>
-            <td className={`${s.der} ${s.espera}`}>{fmtDias(t.dias)} d</td>
-          </tr>
-        ))}
-      </Tabla>
-    </div>
-  );
-}
-
-/** Solo lectura: las O.C. viven en Compras. Aquí se ve cuánto esperó la O.S. por ellas. */
+/**
+ * Solo lectura: las O.C. viven en Compras. La O.S. se queda en "Autorizado a
+ * compra" mientras sus O.C. esperan a Dirección, a Tesorería y al proveedor;
+ * esas esperas se miden aquí, desde los estados de cada O.C.
+ */
 export default function Compra({ exp, ahora }: PropsSeccion) {
   const oc = ordenesCompra(exp);
-  const backorder = tramos(exp, ahora, "espera_refaccion");
-  const diasBackorder = backorder.reduce((a, t) => a + t.dias, 0);
+  const d = desgloseEspera(exp.eventos, ahora);
 
   return (
     <div className={s.bloques}>
@@ -67,18 +46,24 @@ export default function Compra({ exp, ahora }: PropsSeccion) {
         </Tabla>
       )}
 
-      <Esperas titulo="Autorización de Dirección · punto de espera #2" lista={tramos(exp, ahora, "autorizacion_oc")} />
-      <Esperas titulo="Pago · punto de espera #3" lista={tramos(exp, ahora, "en_proceso_pago")} />
+      <div>
+        <Subtitulo>Esperas de la compra</Subtitulo>
+        <Tabla encabezados={["Punto de espera", "Días"]} derecha={[1]}>
+          {(["direccion", "tesoreria", "proveedor"] as const).map((p) => (
+            <tr key={p}>
+              <td>{PUNTO_ESPERA[p]}</td>
+              <td className={`${s.der} ${d[p] > 0 ? s.espera : ""}`}>{fmtDias(d[p])} d</td>
+            </tr>
+          ))}
+        </Tabla>
+      </div>
 
-      {backorder.length > 0 && (
-        <div>
-          <Subtitulo>Backorder</Subtitulo>
-          <p className={s.texto}>
-            <b className={diasBackorder > DIAS_BACKORDER ? s.malo : s.espera}>{fmtDias(diasBackorder)} d</b> en espera de refacción, contra{" "}
-            <b className={s.cifra}>{DIAS_BACKORDER} d</b> de política.
-            {diasBackorder > DIAS_BACKORDER && " Pasó del límite: la O.C. se puede cerrar con lo recibido."}
-          </p>
-        </div>
+      {d.proveedor > 0 && (
+        <p className={s.texto}>
+          <b className={d.proveedor > DIAS_BACKORDER ? s.malo : s.espera}>{fmtDias(d.proveedor)} d</b> esperando refacción del proveedor, contra{" "}
+          <b className={s.cifra}>{DIAS_BACKORDER} d</b> de política.
+          {d.proveedor > DIAS_BACKORDER && " Pasó del límite: la O.C. se puede cerrar con lo recibido."}
+        </p>
       )}
     </div>
   );

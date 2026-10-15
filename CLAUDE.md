@@ -36,12 +36,19 @@ TanStack Query.
 21 de septiembre de 2026. No se modifica sin que ese cambio venga de una decisión
 del cliente.
 
-- `estados.ts` — máquina de 20 estados de la O.S., incluidos `rechazada`,
-  `espera_refaccion` y `retenida`; mapa de transiciones con los dos retornos
-  (O.C. rechazada → presupuesto; sobrecosto → autorización del cliente); área
+- `estados.ts` — los nueve estatus de la O.S. que definió el cliente el 14 oct
+  2026 (Recolección y/o Programación · Diagnóstico / Requisición · Cotizar ·
+  Pte Autorización · Autorizado a compra · En reparación · Remisión · Cerrada ·
+  Cancelada). Sustituyen a la máquina de 20 estados. Mapa de transiciones con
+  cuatro retornos, todos con motivo (Pte Autorización → Cotizar; Autorizado a
+  compra → Cotizar; En reparación → Pte Autorización por sobrecosto; Remisión →
+  En reparación) y cancelación desde cualquier estatus abierto; área
   responsable y umbrales de antigüedad.
   Aquí vive solo la **topología**. Quién puede ejecutar cada transición lo
   resuelve el motor de autorizaciones del backend; el cliente nunca lo sustituye.
+- `bitacora.ts`, `tiempos.ts`, `expediente.ts` — bitácora append-only de la
+  O.S., tiempos derivados de ella y registro de secciones del expediente con
+  sus requisitos (calidad antes de Remisión, factura antes de Cerrada).
 - `areas.ts` — las seis áreas del diagrama de flujo del negocio. El color viaja
   con el dato mediante la variable local `--dom`.
 - `folios.ts` — series por tipo de documento y su ruta de detalle.
@@ -53,11 +60,14 @@ del cliente.
 El producto existe para medirlos. El ámbar (`warning`) es su color y no se usa
 para nada más:
 
-1. `pendiente_autorizacion` — Cliente
-2. `autorizacion_oc` — Dirección
-3. `en_proceso_pago` — Tesorería
+1. Cliente — estatus `pendiente_autorizacion` de la O.S. (Pte Autorización).
+2. Dirección — la O.C. en `en_autorizacion`.
+3. Tesorería — la O.C. `autorizada` y aún no enviada al proveedor (por pagar).
 
-(`espera_refaccion` también cuenta como espera, responsable Abastecimiento.)
+Dirección y Tesorería ya no son estatus de la O.S.: mientras sus O.C. esperan,
+la O.S. está en "Autorizado a compra" y la espera se mide en la O.C.
+(`tiempos.ts`). La espera del proveedor (O.C. enviada, sin recibir completa)
+también cuenta como espera.
 
 ## La unidad y el taller
 
@@ -77,8 +87,8 @@ O.C. · requisición · cotización · comparativo · presupuesto · autorizaci�
 remisión · factura · abastecimiento · tesorería · almacén · taller · unidad ·
 flotilla · capa de costo.
 
-Interfaz 100% en español de México. Estados en participio (*Remisionada*,
-*Facturada*, *En espera de refacción*). Montos `$000,000.00`. Fechas `22 ago` o
+Interfaz 100% en español de México. Los estatus de la O.S. se nombran como los
+nombra el cliente (*Pte Autorización*, *Autorizado a compra*, *Remisión*). Montos `$000,000.00`. Fechas `22 ago` o
 `22 ago 2026`. Desviaciones con signo: `+41.7%`, `−9.1%`.
 
 Los nombres de archivos, componentes, tipos y variables van en español cuando

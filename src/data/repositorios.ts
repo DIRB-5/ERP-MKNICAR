@@ -91,9 +91,9 @@ export interface OrdenServicioRepo {
   /** O.S. programadas y recolecciones en ruta para ese día en el taller. */
   ingresosDelDia(tallerId: string, fecha: Date): Promise<IngresoEsperado[]>;
   obtener(folio: string): Promise<IngresoEsperado | null>;
-  /** Devuelve la O.S. en estado `programada`. */
+  /** Devuelve la O.S. en estado `programacion`. */
   crear(datos: DatosAltaOS): Promise<OrdenServicio>;
-  /** Transiciona a `unidad_recibida`. */
+  /** Recibe la unidad: transiciona a `diagnostico`. */
   recibir(osId: string, datos: DatosRecepcion): Promise<OrdenServicio>;
   /** Unidad que llegó sin cita: crea y recibe en una sola operación. */
   ingresoDirecto(alta: DatosAltaOS, recepcion: DatosRecepcion): Promise<OrdenServicio>;

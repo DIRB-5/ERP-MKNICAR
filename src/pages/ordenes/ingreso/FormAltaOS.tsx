@@ -528,7 +528,7 @@ export function FormAltaOS({ modo, estado: e, onCambiar, errores }: Props) {
           </Campo>
           {/* Solo informa: el estado nace fijo y después cambia únicamente por transiciones. */}
           <SoloLectura etiqueta="Estatus">
-            <Estado estado={modo === "directo" ? "unidad_recibida" : "programada"} />
+            <Estado estado={modo === "directo" ? "diagnostico" : "programacion"} />
           </SoloLectura>
         </div>
         <Campo

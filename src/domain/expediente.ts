@@ -33,17 +33,19 @@ export interface SeccionExpediente {
 }
 
 export const SECCIONES: readonly SeccionExpediente[] = [
-  { clave: "recepcion", titulo: "Recepción", area: "operacion", nace: "unidad_recibida", cierraEn: "en_diagnostico", obligatoriaPara: null },
-  { clave: "diagnostico", titulo: "Diagnóstico", area: "operacion", nace: "en_diagnostico", cierraEn: "presupuesto_elaborado", obligatoriaPara: "requisicion_generada" },
-  { clave: "abastecimiento", titulo: "Abastecimiento", area: "abastecimiento", nace: "requisicion_generada", cierraEn: "pendiente_autorizacion", obligatoriaPara: "presupuesto_elaborado" },
-  { clave: "presupuesto", titulo: "Presupuesto", area: "operacion", nace: "presupuesto_elaborado", cierraEn: "autorizada_compra", obligatoriaPara: "pendiente_autorizacion" },
-  { clave: "autorizacion", titulo: "Autorización del cliente", area: "cliente", nace: "pendiente_autorizacion", cierraEn: "autorizada_compra", obligatoriaPara: "autorizada_compra" },
-  { clave: "compra", titulo: "Compra", area: "abastecimiento", nace: "oc_creada", cierraEn: null, obligatoriaPara: null, soloLectura: true },
-  { clave: "materiales", titulo: "Materiales", area: "almacen", nace: "material_recibido", cierraEn: null, obligatoriaPara: null, soloLectura: true },
-  { clave: "reparacion", titulo: "Reparación", area: "operacion", nace: "en_reparacion", cierraEn: "terminada_qa", obligatoriaPara: "terminada_qa" },
-  { clave: "calidad", titulo: "Calidad", area: "operacion", nace: "terminada_qa", cierraEn: "remisionada", obligatoriaPara: "remisionada" },
-  { clave: "entrega", titulo: "Entrega", area: "operacion", nace: "remisionada", cierraEn: "facturada", obligatoriaPara: "facturada" },
-  { clave: "facturacion", titulo: "Facturación", area: "operacion", nace: "facturada", cierraEn: "cerrada", obligatoriaPara: "cerrada" },
+  { clave: "recepcion", titulo: "Recepción", area: "operacion", nace: "diagnostico", cierraEn: "cotizar", obligatoriaPara: null },
+  { clave: "diagnostico", titulo: "Diagnóstico", area: "operacion", nace: "diagnostico", cierraEn: "pendiente_autorizacion", obligatoriaPara: "cotizar" },
+  { clave: "abastecimiento", titulo: "Abastecimiento", area: "abastecimiento", nace: "cotizar", cierraEn: "pendiente_autorizacion", obligatoriaPara: "pendiente_autorizacion" },
+  { clave: "presupuesto", titulo: "Presupuesto", area: "operacion", nace: "cotizar", cierraEn: "autorizado_compra", obligatoriaPara: "pendiente_autorizacion" },
+  { clave: "autorizacion", titulo: "Autorización del cliente", area: "cliente", nace: "pendiente_autorizacion", cierraEn: "autorizado_compra", obligatoriaPara: "autorizado_compra" },
+  { clave: "compra", titulo: "Compra", area: "abastecimiento", nace: "autorizado_compra", cierraEn: null, obligatoriaPara: null, soloLectura: true },
+  { clave: "materiales", titulo: "Materiales", area: "almacen", nace: "autorizado_compra", cierraEn: null, obligatoriaPara: null, soloLectura: true },
+  { clave: "reparacion", titulo: "Reparación", area: "operacion", nace: "en_reparacion", cierraEn: "remision", obligatoriaPara: "remision" },
+  // La revisión de salida ya no es estatus: se hace al terminar la reparación y es requisito para Remisión.
+  { clave: "calidad", titulo: "Calidad", area: "operacion", nace: "en_reparacion", cierraEn: "remision", obligatoriaPara: "remision" },
+  { clave: "entrega", titulo: "Entrega", area: "operacion", nace: "remision", cierraEn: "cerrada", obligatoriaPara: "cerrada" },
+  // La factura ya no es estatus: se vincula en Remisión y es requisito para cerrar.
+  { clave: "facturacion", titulo: "Facturación", area: "operacion", nace: "remision", cierraEn: "cerrada", obligatoriaPara: "cerrada" },
   { clave: "cierre", titulo: "Cierre", area: "direccion", nace: "cerrada", cierraEn: null, obligatoriaPara: null, soloLectura: true },
 ];
 
@@ -221,7 +223,8 @@ export const REQUISITOS: Partial<Record<ClaveSeccion, (eventos: readonly EventoO
   reparacion: (ev) =>
     eventosDe(ev, "mano_obra_cargada").length > 0 ? null : "Falta registrar al menos una entrada de mano de obra en Reparación.",
   calidad: (ev) =>
-    desdeUltimaEntrada(ev, "terminada_qa").some((e) => e.tipo === "calidad_liberada")
+    // Si la unidad regresó a reparación, se vuelve a liberar.
+    desdeUltimaEntrada(ev, "en_reparacion").some((e) => e.tipo === "calidad_liberada")
       ? null
       : "Falta la liberación de calidad.",
   entrega: (ev) => (eventosDe(ev, "remision_emitida").length > 0 ? null : "Falta registrar la entrega en la remisión."),

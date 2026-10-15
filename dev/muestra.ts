@@ -8,13 +8,13 @@
  * Para quitarlo del proyecto basta con borrar este archivo y su import en main.tsx.
  *
  * Qué trae:
- *  - OS-MUE-0001 · 0002 · 0003: tres O.S. en curso (autorización, reparación, programada).
- *  - OS-MUE-0100: una O.S. que recorre 19 de los 20 estados, con los dos
- *    retornos (cliente rechaza el presupuesto; sobrecosto en reparación),
- *    espera de refacción y retención, hasta cerrar.
- *  - OS-MUE-1xx: la misma O.S. detenida en cada momento del ciclo, para ver el
- *    expediente como se ve en cada estado.
- *  - OS-MUE-0199: una O.S. rechazada por el cliente.
+ *  - OS-MUE-0001 · 0002 · 0003: tres O.S. en curso (Pte Autorización, En reparación, Programación).
+ *  - OS-MUE-0100: una O.S. que recorre los ocho estatus no cancelados con los
+ *    cuatro retornos posibles (recotizar dos veces, sobrecosto y regreso de
+ *    Remisión a reparación) y sus O.C. pasando por Dirección y Tesorería.
+ *  - OS-MUE-0101 a 0107: la misma O.S. justo al entrar a cada estatus, para
+ *    capturar desde ahí.
+ *  - OS-MUE-0199: una O.S. cancelada.
  */
 import type { EstadoOS } from "@/domain/estados";
 import type { CargasEvento, EventoOS, TipoEvento } from "@/domain/bitacora";
@@ -75,7 +75,7 @@ function fechasDeCarga(p: Paso, en: string): Paso["carga"] {
 
 /** `d` son días atrás. `a` marca el estado al que mueve el evento. */
 function bitacora(folio: string, pasos: Paso[]): EventoOS[] {
-  let estado: EstadoOS = "programada";
+  let estado: EstadoOS = "programacion";
   return pasos.map((p, i) => {
     const en = hace(p.d).toISOString();
     const e = {
@@ -101,7 +101,7 @@ const cambio = (d: number, a: EstadoOS, quien: Persona, motivo?: string) => paso
 
 const recepcion = (d: number, km: number, combustible: number): Paso =>
   paso(d, "recepcion_registrada", ASESORA, {
-    a: "unidad_recibida",
+    a: "diagnostico",
     carga: {
       fechaHora: hace(d).toISOString(),
       kilometraje: km,
@@ -205,14 +205,32 @@ function proveedorMuestra(prov: Prov, rfc: string, opinionHace: number | null): 
   };
 }
 
-/* ── La O.S. completa: 19 estados, dos retornos, espera de refacción y retención ── */
+/** La O.C. reporta su estado: de ahí salen las esperas de Dirección, Tesorería y proveedor. */
+const oc = (d: number, folio: string, estado: CargasEvento["oc_vinculada"]["estado"], monto: number, quien: Persona = COMPRAS) =>
+  paso(d, "oc_vinculada", quien, { carga: { folio, proveedor: PROV_NORTE.nombre, estado, monto } });
+
+const material = (d: number, descripcion: string, capa: string) =>
+  paso(d, "material_recibido", ALMACEN, {
+    carga: { partidas: [{ descripcion, cantidad: 1, almacen: "Almacén Toluca", capaCostoId: capa }], pendientes: [] },
+  });
+
+const manoObra = (d: number, quien: Persona, horas: number, costoHora: number, descripcion: string) =>
+  paso(d, "mano_obra_cargada", quien, {
+    carga: { tecnicoId: quien.id, tecnicoNombre: quien.nombre, fecha: dia(hace(d)), horas, costoHora, descripcion },
+  });
+
+const liberacion = (d: number) =>
+  paso(d, "calidad_liberada", SESION, {
+    carga: { puntos: PUNTOS_CALIDAD.map((punto) => ({ punto, cumple: true })), liberoId: SESION.id, liberoNombre: SESION.nombre, observaciones: "Sin observaciones." },
+  });
+
+/* ── La O.S. completa: ocho estatus, los cuatro retornos y sus O.C. ── */
 
 const FOLIO_COMPLETA = "OS-MUE-0100";
 
 const CICLO_COMPLETO: Paso[] = [
-  paso(24, "os_creada", ASESORA, { a: "programada" }),
+  paso(24, "os_creada", ASESORA, { a: "programacion" }),
   recepcion(22, 64210, 3),
-  cambio(21.8, "en_diagnostico", TECNICO),
   paso(21.8, "tecnico_asignado", ASESORA, { carga: { tecnicoId: TECNICO.id, tecnicoNombre: TECNICO.nombre } }),
   paso(21.5, "hallazgo_agregado", TECNICO, {
     carga: {
@@ -225,86 +243,63 @@ const CICLO_COMPLETO: Paso[] = [
     },
   }),
   paso(21.4, "hallazgo_agregado", TECNICO, {
-    carga: {
-      hallazgoId: "h2",
-      descripcion: "Fuga leve de líquido en la bomba de clutch.",
-      severidad: "moderado",
-      evidencias: [],
-      servicios: [],
-      refacciones: [],
-    },
+    carga: { hallazgoId: "h2", descripcion: "Fuga leve de líquido en la bomba de clutch.", severidad: "moderado", evidencias: [], servicios: [], refacciones: [] },
   }),
-  cambio(21.2, "requisicion_generada", TECNICO),
+  cambio(21.2, "cotizar", TECNICO),
   paso(21.2, "requisicion_generada", COMPRAS, { carga: { folio: "REQ-MUE-0100", estado: "enviada", comparativoFolio: null } }),
-  cambio(20.5, "en_cotizacion", COMPRAS),
   cotizacion(20, PROV_NORTE, [["h1:0", 3350, "inmediata", null]]),
   cotizacion(19.8, PROV_AUTO, [["h1:0", 3180, "sobre_pedido", 3]]),
   cotizacion(19.6, PROV_DIST, [["h1:0", 3420, "inmediata", null]]),
   eleccion(19.2, "h1:0", PROV_NORTE, 20, 3350, "Lo tiene en existencia; el más barato tarda 3 días."),
-  cambio(19, "presupuesto_elaborado", ASESORA),
-  presupuesto(19, 1, [["Reemplazo de clutch", "MO-CLU", 4, 450]], [["Kit de clutch genérico", "KIT-CLU-G", 1, 4200]]),
+  presupuesto(19, 1, [["Reemplazo de clutch", "MO-CLU", 4, 450]], [["Kit de clutch genérico", "KIT-CLU-G", 1, 4355]]),
   cambio(18.8, "pendiente_autorizacion", ASESORA),
   solicitud(18.8, 1),
   respuesta(16, 1, "rechazada"),
-  // Retorno 1: el cliente rechaza y pide otra cotización.
-  cambio(16, "presupuesto_elaborado", ASESORA, "El cliente pidió cotizar el kit de clutch original."),
+  // Retorno: el cliente pide recotizar.
+  cambio(16, "cotizar", ASESORA, "El cliente pidió cotizar el kit de clutch original."),
   presupuesto(15.5, 2, [["Reemplazo de clutch", "MO-CLU", 4, 450]], [["Kit de clutch original", "KIT-CLU-O", 1, 6900]], "Cambio a kit original a petición del cliente."),
   cambio(15.4, "pendiente_autorizacion", ASESORA),
   solicitud(15.4, 2),
   respuesta(14.6, 2, "autorizada"),
-  cambio(14.6, "autorizada_compra", ASESORA),
-  paso(14.5, "requisicion_actualizada", COMPRAS, { carga: { folio: "REQ-MUE-0100", estado: "adjudicada", comparativoFolio: "CMP-MUE-0100" } }),
-  cambio(14.4, "oc_creada", COMPRAS),
-  paso(14.4, "oc_vinculada", COMPRAS, { carga: { folio: "OC-MUE-0100", proveedor: "Proveedor de muestra", estado: "en_autorizacion", monto: 5400 } }),
-  cambio(14.3, "autorizacion_oc", COMPRAS),
-  paso(12.6, "oc_vinculada", DIRECCION, { carga: { folio: "OC-MUE-0100", proveedor: "Proveedor de muestra", estado: "autorizada", monto: 5400 } }),
-  cambio(12.6, "en_proceso_pago", DIRECCION),
-  paso(11, "oc_vinculada", TESORERIA, { carga: { folio: "OC-MUE-0100", proveedor: "Proveedor de muestra", estado: "enviada_proveedor", monto: 5400 } }),
-  cambio(11, "espera_refaccion", TESORERIA),
-  paso(8.5, "material_recibido", ALMACEN, {
-    carga: { partidas: [{ descripcion: "Kit de clutch original", cantidad: 1, almacen: "Almacén Toluca", capaCostoId: "CAPA-MUE-0100" }], pendientes: [] },
-  }),
-  cambio(8.5, "material_recibido", ALMACEN),
+  cambio(14.6, "autorizado_compra", ASESORA),
+  // La O.S. se queda en Autorizado a compra; la O.C. pasa por Dirección, Tesorería y el proveedor.
+  oc(14.4, "OC-MUE-0100", "en_autorizacion", 5400),
+  oc(12.6, "OC-MUE-0100", "autorizada", 5400, DIRECCION),
+  oc(11, "OC-MUE-0100", "enviada_proveedor", 5400, TESORERIA),
+  oc(8.5, "OC-MUE-0100", "recibida_total", 5400, ALMACEN),
+  material(8.5, "Kit de clutch original", "CAPA-MUE-0100"),
   cambio(8.3, "en_reparacion", TECNICO),
-  paso(8, "mano_obra_cargada", TECNICO, {
-    carga: { tecnicoId: TECNICO.id, tecnicoNombre: TECNICO.nombre, fecha: dia(hace(8)), horas: 5, costoHora: 180, descripcion: "Desmontaje de transmisión y cambio de kit de clutch." },
-  }),
+  manoObra(8, TECNICO, 5, 180, "Desmontaje de transmisión y cambio de kit de clutch."),
   paso(8, "refaccion_consumida", ALMACEN, {
     carga: { numeroParte: "KIT-CLU-O", descripcion: "Kit de clutch original", cantidad: 1, costoUnitario: 5400, salidaFolio: "SAL-MUE-0100", capaCostoId: "CAPA-MUE-0100" },
   }),
-  // Retorno 2: sobrecosto durante la reparación.
+  // Retorno: sobrecosto durante la reparación.
   presupuesto(7.6, 3, [["Rectificado de volante", "MO-VOL", 1.5, 450]], [["Collarín hidráulico", "COL-HID", 1, 1850]], "Sobrecosto: volante cristalizado y collarín con fuga."),
   cambio(7.6, "pendiente_autorizacion", TECNICO, "Sobrecosto: volante cristalizado y collarín con fuga."),
   solicitud(7.6, 3),
   respuesta(6.4, 3, "parcial", 1850),
-  cambio(6.4, "autorizada_compra", ASESORA),
-  cambio(6.3, "oc_creada", COMPRAS),
-  paso(6.3, "oc_vinculada", COMPRAS, { carga: { folio: "OC-MUE-0101", proveedor: "Proveedor de muestra", estado: "en_autorizacion", monto: 1150 } }),
-  cambio(6.2, "autorizacion_oc", COMPRAS),
-  cambio(5.6, "en_proceso_pago", DIRECCION),
-  paso(5.1, "oc_vinculada", TESORERIA, { carga: { folio: "OC-MUE-0101", proveedor: "Proveedor de muestra", estado: "recibida_total", monto: 1150 } }),
-  paso(5, "material_recibido", ALMACEN, {
-    carga: { partidas: [{ descripcion: "Collarín hidráulico", cantidad: 1, almacen: "Almacén Toluca", capaCostoId: "CAPA-MUE-0101" }], pendientes: [] },
-  }),
-  cambio(5, "material_recibido", ALMACEN),
+  cambio(6.4, "autorizado_compra", ASESORA),
+  oc(6.3, "OC-MUE-0101", "en_autorizacion", 1150),
+  oc(5.6, "OC-MUE-0101", "autorizada", 1150, DIRECCION),
+  oc(5.1, "OC-MUE-0101", "enviada_proveedor", 1150, TESORERIA),
+  oc(5, "OC-MUE-0101", "recibida_total", 1150, ALMACEN),
+  material(5, "Collarín hidráulico", "CAPA-MUE-0101"),
   cambio(4.9, "en_reparacion", AYUDANTE),
-  paso(4.6, "mano_obra_cargada", AYUDANTE, {
-    carga: { tecnicoId: AYUDANTE.id, tecnicoNombre: AYUDANTE.nombre, fecha: dia(hace(4.6)), horas: 1.5, costoHora: 120, descripcion: "Cambio de collarín y prueba de manejo." },
-  }),
+  manoObra(4.6, AYUDANTE, 1.5, 120, "Cambio de collarín y prueba de manejo."),
   paso(4.6, "refaccion_consumida", ALMACEN, {
     carga: { numeroParte: "COL-HID", descripcion: "Collarín hidráulico", cantidad: 1, costoUnitario: 1150, salidaFolio: "SAL-MUE-0101", capaCostoId: "CAPA-MUE-0101" },
   }),
   paso(4.5, "nota_agregada", TECNICO, { carga: { seccion: "reparacion", texto: "El volante no se rectificó: el cliente solo autorizó el collarín." } }),
-  cambio(4.4, "terminada_qa", AYUDANTE),
-  paso(4.1, "calidad_liberada", SESION, {
-    carga: { puntos: PUNTOS_CALIDAD.map((punto) => ({ punto, cumple: true })), liberoId: SESION.id, liberoNombre: SESION.nombre, observaciones: "Sin observaciones." },
-  }),
-  cambio(4, "remisionada", ASESORA),
+  liberacion(4.1),
+  cambio(4, "remision", ASESORA),
   paso(3.9, "remision_emitida", ASESORA, {
     carga: { folio: "REM-MUE-0100", kilometrajeSalida: 64236, entregadaEn: hace(3.9).toISOString(), recibeNombre: "Chofer de muestra", firma: null },
   }),
-  cambio(3.5, "retenida", DIRECCION, "Cliente con saldo vencido: la factura se retiene hasta que pague."),
-  cambio(1.5, "facturada", ASESORA),
+  // Retorno: el cliente regresa la unidad antes de cerrar.
+  cambio(3.5, "en_reparacion", ASESORA, "El cliente reporta un rechinido al pisar el clutch."),
+  manoObra(3, AYUDANTE, 0.5, 120, "Ajuste y lubricación del collarín."),
+  liberacion(2.6),
+  cambio(2.5, "remision", ASESORA),
   paso(1.5, "factura_vinculada", ASESORA, {
     carga: { folio: "A-MUE-0100", monto: 13456, fecha: dia(hace(1.5)), osFolios: [FOLIO_COMPLETA] },
   }),
@@ -312,8 +307,9 @@ const CICLO_COMPLETO: Paso[] = [
 ];
 
 /**
- * La misma O.S. detenida en el primer paso por cada estado. Se recorre el
- * tiempo para que el tramo actual dure lo mismo que duró en la O.S. completa.
+ * La misma O.S. justo al entrar a cada estatus (la primera vez): trae lo que
+ * pasó antes y lo que el sistema genera al entrar, para capturar desde ahí.
+ * Se recorre el tiempo para que la entrada haya sido hace medio día.
  */
 function momentos(): { estado: EstadoOS; pasos: Paso[] }[] {
   const vistos = new Set<EstadoOS>();
@@ -321,9 +317,10 @@ function momentos(): { estado: EstadoOS; pasos: Paso[] }[] {
   CICLO_COMPLETO.forEach((p, i) => {
     if (!p.a || vistos.has(p.a) || p.a === "cerrada") return;
     vistos.add(p.a);
-    const siguiente = CICLO_COMPLETO.findIndex((x, j) => j > i && x.a != null);
-    const fin = siguiente === -1 ? CICLO_COMPLETO.length : siguiente;
-    const corrimiento = siguiente === -1 ? 0 : (CICLO_COMPLETO[siguiente]?.d ?? 0);
+    // Lo que el sistema registra en el mismo instante (p. ej. la solicitud de refacciones) entra con el estado.
+    let fin = i + 1;
+    while (fin < CICLO_COMPLETO.length && CICLO_COMPLETO[fin]?.d === p.d && !CICLO_COMPLETO[fin]?.a) fin += 1;
+    const corrimiento = p.d - 0.5;
     r.push({ estado: p.a, pasos: CICLO_COMPLETO.slice(0, fin).map((x) => ({ ...x, d: x.d - corrimiento })) });
   });
   return r;
@@ -406,9 +403,9 @@ export function cargarMuestra(): void {
     conFicha?: boolean;
   }) {
     const eventos = bitacora(o.folio, o.pasos);
-    const estado = [...eventos].reverse().find((e) => e.estadoDespues)?.estadoDespues ?? "programada";
+    const estado = [...eventos].reverse().find((e) => e.estadoDespues)?.estadoDespues ?? "programacion";
     const id = `muestra-${o.folio}`;
-    const abierta = estado !== "programada" && estado !== "cerrada" && estado !== "rechazada";
+    const abierta = estado !== "programacion" && estado !== "cerrada" && estado !== "cancelada";
     const unidad: UnidadResumen = {
       unidad: {
         id,
@@ -483,9 +480,8 @@ export function cargarMuestra(): void {
     motivos: ["Hace un ruido al frenar.", "La camioneta se va hacia la derecha."],
     conFicha: true,
     pasos: [
-      paso(11, "os_creada", ASESORA, { a: "programada" }),
+      paso(11, "os_creada", ASESORA, { a: "programacion" }),
       recepcion(10, 87420, 4),
-      cambio(9.8, "en_diagnostico", TECNICO),
       paso(9.8, "tecnico_asignado", ASESORA, { carga: { tecnicoId: TECNICO.id, tecnicoNombre: TECNICO.nombre } }),
       paso(9.5, "hallazgo_agregado", TECNICO, {
         carga: {
@@ -500,19 +496,17 @@ export function cargarMuestra(): void {
           ],
         },
       }),
-      cambio(9, "requisicion_generada", TECNICO),
+      cambio(9, "cotizar", TECNICO),
       paso(9, "requisicion_generada", COMPRAS, { carga: { folio: "REQ-MUE-0001", estado: "enviada", comparativoFolio: null } }),
-      cambio(8.6, "en_cotizacion", COMPRAS),
       cotizacion(8.2, PROV_NORTE, [["h1:0", 1150, "inmediata", null], ["h1:1", 1320, "inmediata", null]]),
       cotizacion(7.9, PROV_AUTO, [["h1:0", 1090, "inmediata", null], ["h1:1", 1380, "sobre_pedido", 2]]),
       eleccion(7.5, "h1:0", PROV_AUTO, 7.9, 1090),
       eleccion(7.5, "h1:1", PROV_NORTE, 8.2, 1320),
-      cambio(7, "presupuesto_elaborado", ASESORA),
-      presupuesto(7, 1, [["Cambio de balatas y discos delanteros", "MO-FRE", 2, 425]], [["Juego de balatas delanteras", "BAL-DEL-01", 1, 1500], ["Disco de freno delantero", "DIS-DEL-01", 2, 1714]]),
+      presupuesto(7, 1, [["Cambio de balatas y discos delanteros", "MO-FRE", 2, 425]], [["Juego de balatas delanteras", "BAL-DEL-01", 1, 1417], ["Disco de freno delantero", "DIS-DEL-01", 2, 1716]]),
       cambio(6.5, "pendiente_autorizacion", ASESORA),
       solicitud(6.5, 1),
       respuesta(5, 1, "rechazada"),
-      cambio(5, "presupuesto_elaborado", ASESORA, "El cliente pidió cotizar amortiguadores originales en lugar de genéricos."),
+      cambio(5, "cotizar", ASESORA, "El cliente pidió cotizar amortiguadores originales en lugar de genéricos."),
       presupuesto(4.5, 2, [["Reemplazo de suspensión delantera y alineación", "MO-SUSP", 3, 550]], [["Amortiguador delantero original", "AMO-ORIG-01", 2, 2850]], "Se suma la suspensión delantera con amortiguadores originales."),
       cambio(3.2, "pendiente_autorizacion", ASESORA),
       solicitud(3.2, 2),
@@ -530,9 +524,8 @@ export function cargarMuestra(): void {
     servicio: "preventivo",
     motivos: ["Servicio de los 140 mil kilómetros."],
     pasos: [
-      paso(6, "os_creada", ASESORA, { a: "programada" }),
+      paso(6, "os_creada", ASESORA, { a: "programacion" }),
       recepcion(6, 142300, 5),
-      cambio(5.9, "en_diagnostico", TECNICO),
       paso(5.9, "tecnico_asignado", ASESORA, { carga: { tecnicoId: TECNICO.id, tecnicoNombre: TECNICO.nombre } }),
       paso(5.8, "hallazgo_agregado", TECNICO, {
         carga: {
@@ -544,34 +537,24 @@ export function cargarMuestra(): void {
           refacciones: [{ id: null, clave: "ACE-15W40", descripcion: "Aceite 15W-40, cubeta 19 L", cantidad: 1 }],
         },
       }),
-      cambio(5.5, "requisicion_generada", TECNICO),
+      cambio(5.5, "cotizar", TECNICO),
       paso(5.5, "requisicion_generada", COMPRAS, { carga: { folio: "REQ-MUE-0002", estado: "enviada", comparativoFolio: null } }),
-      cambio(5.2, "en_cotizacion", COMPRAS),
       cotizacion(5.1, PROV_NORTE, [["h1:0", 3072, "inmediata", null]]),
       cotizacion(5, PROV_DIST, [["h1:0", 3190, "inmediata", null]]),
       cotizacion(4.95, PROV_AUTO, [["h1:0", 3240, "inmediata", null]]),
       eleccion(4.9, "h1:0", PROV_NORTE, 5.1, 3072),
-      cambio(4.8, "presupuesto_elaborado", ASESORA),
-      presupuesto(4.8, 1, [["Servicio preventivo de los 140 mil km", "MO-PREV-140", 3, 800]], [["Aceite 15W-40, cubeta 19 L", "ACE-15W40", 1, 4560], ["Filtro de aceite", "FIL-ACE-01", 1, 690]]),
+      presupuesto(4.8, 1, [["Servicio preventivo de los 140 mil km", "MO-PREV-140", 3, 800]], [["Aceite 15W-40, cubeta 19 L", "ACE-15W40", 1, 3994]]),
       cambio(4.6, "pendiente_autorizacion", ASESORA),
       solicitud(4.6, 1),
       respuesta(4, 1, "autorizada"),
-      cambio(4, "autorizada_compra", ASESORA),
-      cambio(3.9, "oc_creada", COMPRAS),
-      paso(3.9, "oc_vinculada", COMPRAS, { carga: { folio: "OC-MUE-0002", proveedor: "Proveedor de muestra", estado: "recibida_total", monto: 3470 } }),
-      cambio(3.6, "autorizacion_oc", COMPRAS),
-      cambio(3, "en_proceso_pago", DIRECCION),
-      paso(1.4, "material_recibido", ALMACEN, {
-        carga: {
-          partidas: [{ descripcion: "Aceite 15W-40, cubeta 19 L", cantidad: 1, almacen: "Almacén Toluca", capaCostoId: "CAPA-MUE-0002" }],
-          pendientes: [{ descripcion: "Filtro de aceite", cantidad: 1 }],
-        },
-      }),
-      cambio(1.4, "material_recibido", ALMACEN),
+      cambio(4, "autorizado_compra", ASESORA),
+      oc(3.9, "OC-MUE-0002", "en_autorizacion", 3072),
+      oc(3.6, "OC-MUE-0002", "autorizada", 3072, DIRECCION),
+      oc(3, "OC-MUE-0002", "enviada_proveedor", 3072, TESORERIA),
+      oc(1.4, "OC-MUE-0002", "recibida_total", 3072, ALMACEN),
+      material(1.4, "Aceite 15W-40, cubeta 19 L", "CAPA-MUE-0002"),
       cambio(1.2, "en_reparacion", AYUDANTE),
-      paso(1, "mano_obra_cargada", AYUDANTE, {
-        carga: { tecnicoId: AYUDANTE.id, tecnicoNombre: AYUDANTE.nombre, fecha: dia(hace(1)), horas: 3.5, costoHora: 120, descripcion: "Cambio de aceite y revisión de niveles." },
-      }),
+      manoObra(1, AYUDANTE, 3.5, 120, "Cambio de aceite y revisión de niveles."),
     ],
   });
 
@@ -585,7 +568,7 @@ export function cargarMuestra(): void {
     taller: toluca,
     servicio: "diagnostico",
     motivos: ["Se prende el testigo del motor en carretera.", "Tarda en arrancar en frío.", "Revisar luces traseras."],
-    pasos: [paso(2, "os_creada", ASESORA, { a: "programada" })],
+    pasos: [paso(2, "os_creada", ASESORA, { a: "programacion" })],
   });
 
   // La O.S. completa y sus momentos.
@@ -604,7 +587,7 @@ export function cargarMuestra(): void {
     alta({ ...comun, folio: `OS-MUE-${n.padStart(4, "0")}`, placas: `MUE-${n}-M`, pasos: m.pasos });
   });
 
-  // Una O.S. que el cliente rechaza.
+  // Una O.S. cancelada: el cliente decide no reparar.
   alta({
     folio: "OS-MUE-0199",
     placas: "MUE-199-R",
@@ -616,9 +599,8 @@ export function cargarMuestra(): void {
     servicio: "correctivo",
     motivos: ["No enciende el aire acondicionado."],
     pasos: [
-      paso(9, "os_creada", ASESORA, { a: "programada" }),
+      paso(9, "os_creada", ASESORA, { a: "programacion" }),
       recepcion(8, 120400, 2),
-      cambio(7.8, "en_diagnostico", TECNICO),
       paso(7.8, "tecnico_asignado", ASESORA, { carga: { tecnicoId: TECNICO.id, tecnicoNombre: TECNICO.nombre } }),
       paso(7.5, "hallazgo_agregado", TECNICO, {
         carga: {
@@ -630,17 +612,15 @@ export function cargarMuestra(): void {
           refacciones: [{ id: null, clave: "COMP-AC", descripcion: "Compresor de A/C", cantidad: 1 }],
         },
       }),
-      cambio(7.2, "requisicion_generada", TECNICO),
+      cambio(7.2, "cotizar", TECNICO),
       paso(7.2, "requisicion_generada", COMPRAS, { carga: { folio: "REQ-MUE-0199", estado: "enviada", comparativoFolio: null } }),
-      cambio(6.8, "en_cotizacion", COMPRAS),
       cotizacion(6.5, PROV_DIST, [["h1:0", 5900, "sobre_pedido", 4]]),
       eleccion(6.2, "h1:0", PROV_DIST, 6.5, 5900),
-      cambio(6, "presupuesto_elaborado", ASESORA),
-      presupuesto(6, 1, [["Cambio de compresor y carga de gas", "MO-AC", 3, 450]], [["Compresor de A/C", "COMP-AC", 1, 7800]]),
+      presupuesto(6, 1, [["Cambio de compresor y carga de gas", "MO-AC", 3, 450]], [["Compresor de A/C", "COMP-AC", 1, 7670]]),
       cambio(5.8, "pendiente_autorizacion", ASESORA),
       solicitud(5.8, 1),
       respuesta(2, 1, "rechazada"),
-      cambio(2, "rechazada", ASESORA, "El cliente decidió no reparar el A/C esta temporada."),
+      cambio(2, "cancelada", ASESORA, "El cliente decidió no reparar el A/C esta temporada."),
     ],
   });
 }

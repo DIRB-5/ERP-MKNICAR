@@ -82,8 +82,8 @@ function transicionar(os: OrdenServicio, a: EstadoOS, motivo: string | null, pro
 
   const u = unidades.find((x) => x.unidad.id === os.unidadId);
 
-  // La solicitud de refacciones nace con el estado; sus piezas salen de los hallazgos.
-  if (a === "requisicion_generada" && !eventosDeOS(os.folio).some((e) => e.tipo === "requisicion_generada")) {
+  // La solicitud de refacciones nace al pasar a cotizar; sus piezas salen de los hallazgos.
+  if (a === "cotizar" && !eventosDeOS(os.folio).some((e) => e.tipo === "requisicion_generada")) {
     sellar(os, { tipo: "requisicion_generada", carga: { folio: folioDoc(SERIE.requisicion), estado: "enviada", comparativoFolio: null } });
   }
 
@@ -150,12 +150,12 @@ function nueva(datos: DatosAltaOS): OrdenServicio {
     ...datos,
     folio: `${SERIE.os}-${String(consecutivo).padStart(5, "0")}`,
     // Estado inicial de la máquina; no es una transición, pero abre la bitácora.
-    estado: "programada",
+    estado: "programacion",
     creadaEn: new Date(),
     creadaPor: "",
   };
   ordenes.push(os);
-  sellar(os, { tipo: "os_creada", carga: {} }, { de: "programada", a: "programada" });
+  sellar(os, { tipo: "os_creada", carga: {} }, { de: "programacion", a: "programacion" });
   return os;
 }
 
@@ -177,7 +177,7 @@ const aCargaRecepcion = (d: DatosRecepcion) => ({
 export const ordenServicioRepoMemoria: OrdenServicioRepo = {
   async ingresosDelDia(tallerId, fecha) {
     return ordenes
-      .filter((os) => os.estado === "programada" && (tallerId === TODOS || os.tallerId === tallerId))
+      .filter((os) => os.estado === "programacion" && (tallerId === TODOS || os.tallerId === tallerId))
       .filter((os) => {
         const cuando = os.recoleccion?.fechaHora ?? os.programadaPara;
         return cuando != null && mismoDia(cuando, fecha);
@@ -198,7 +198,7 @@ export const ordenServicioRepoMemoria: OrdenServicioRepo = {
 
   async recibir(osId, datos) {
     const os = buscarOS(osId);
-    transicionar(os, "unidad_recibida", null, { tipo: "recepcion_registrada", carga: aCargaRecepcion(datos) });
+    transicionar(os, "diagnostico", null, { tipo: "recepcion_registrada", carga: aCargaRecepcion(datos) });
 
     const u = unidades.find((x) => x.unidad.id === os.unidadId);
     if (u) {

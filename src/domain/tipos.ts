@@ -171,7 +171,7 @@ export interface Recoleccion {
 
 /**
  * La O.S. al abrirse NO sabe qué tiene el vehículo: es el contenedor donde
- * después cabrá el diagnóstico (estado `en_diagnostico`, lo hace un técnico).
+ * después cabrá el diagnóstico (estado `diagnostico`, lo hace un técnico).
  * Al abrir solo se capturan los motivos que reporta el cliente, en sus palabras.
  */
 export interface OrdenServicio {

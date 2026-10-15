@@ -1,10 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import type { DatosFlujo } from "@/components/AlertaFlujo/AlertaFlujo";
 
-export type FlujoDetenido = Record<
-  "pendiente_autorizacion" | "autorizacion_oc" | "en_proceso_pago",
-  DatosFlujo
->;
+/** Los tres puntos medibles: el cliente en la O.S.; Dirección y Tesorería en sus O.C. */
+export type FlujoDetenido = Record<"cliente" | "direccion" | "tesoreria", DatosFlujo>;
 
 /**
  * Conteo, antigüedad promedio y monto detenido en los tres puntos de espera,

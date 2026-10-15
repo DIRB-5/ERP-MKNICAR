@@ -13,35 +13,27 @@ import { useFlujoDetenido, type FlujoDetenido } from "@/app/useFlujoDetenido";
 import {
   ETAPAS,
   useTableroDireccion,
-  type Etapa,
   type FilaClienteTop,
   type FilaRankingTaller,
   type KpisDireccion,
 } from "@/app/useTableroDireccion";
+import { ETAPA_LABEL } from "@/app/etapas";
 import { useSetTaller, useTaller } from "@/app/useTaller";
 import { TabsTableros } from "./TabsTableros";
 import styles from "./Tableros.module.css";
 
 /** Los tres puntos de espera medibles, en el orden del flujo. */
 const PUNTOS_ESPERA: readonly {
-  estado: keyof FlujoDetenido;
+  punto: keyof FlujoDetenido;
   titulo: string;
   area: Area;
   unidad: string;
 }[] = [
-  { estado: "pendiente_autorizacion", titulo: "Pendiente de autorización del cliente", area: "cliente", unidad: "O.S." },
-  { estado: "autorizacion_oc", titulo: "O.C. pendiente de autorización de Dirección", area: "direccion", unidad: "O.C." },
-  { estado: "en_proceso_pago", titulo: "En proceso de pago (Tesorería)", area: "tesoreria", unidad: "O.C." },
+  { punto: "cliente", titulo: "Pte Autorización del cliente", area: "cliente", unidad: "O.S." },
+  { punto: "direccion", titulo: "O.C. pendiente de autorización de Dirección", area: "direccion", unidad: "O.C." },
+  { punto: "tesoreria", titulo: "O.C. pendiente de pago (Tesorería)", area: "tesoreria", unidad: "O.C." },
 ];
 
-const ETAPA_LABEL: Record<Etapa, string> = {
-  diagnostico: "Diagnóstico",
-  cotizacion: "Cotización",
-  autorizacion: "Autorización",
-  compra_pago: "Compra y pago",
-  reparacion: "En reparación",
-  entrega: "Entrega y facturación",
-};
 
 /** Millones y miles abreviados para etiquetas de gráfica: $2.15 M · $987 K. */
 const abreviado = (v: number): string =>
@@ -147,8 +139,8 @@ export function Component() {
   const resumenFlujo = flujo
     ? PUNTOS_ESPERA.reduce(
         (acc, p) => ({
-          documentos: acc.documentos + flujo[p.estado].conteo,
-          monto: acc.monto + flujo[p.estado].montoDetenido,
+          documentos: acc.documentos + flujo[p.punto].conteo,
+          monto: acc.monto + flujo[p.punto].montoDetenido,
         }),
         { documentos: 0, monto: 0 }
       )
@@ -199,12 +191,12 @@ export function Component() {
         <div className={styles.fila3}>
           {PUNTOS_ESPERA.map((p) => (
             <AlertaFlujo
-              key={p.estado}
+              key={p.punto}
               titulo={p.titulo}
               area={p.area}
               unidadConteo={p.unidad}
-              datos={flujo?.[p.estado]}
-              href={`/ordenes?vista=tabla&estado=${p.estado}`}
+              datos={flujo?.[p.punto]}
+              href={`/ordenes?vista=tabla&estado=${p.punto === "cliente" ? "pendiente_autorizacion" : "autorizado_compra"}`}
             />
           ))}
         </div>
@@ -246,9 +238,9 @@ export function Component() {
               ETAPAS.map((e) => ({
                 id: e,
                 etiqueta: ETAPA_LABEL[e],
-                nota: e === "autorizacion" ? "detenidas con el cliente" : undefined,
+                nota: e === "pendiente_autorizacion" ? "detenidas con el cliente" : undefined,
                 valor: etapas.conteo[e],
-                tono: e === "autorizacion" ? ("alerta" as const) : ("brand" as const),
+                tono: e === "pendiente_autorizacion" ? ("alerta" as const) : ("brand" as const),
                 texto: (
                   <>
                     {numero(etapas.conteo[e])} <span className={styles.cifraNota}>{pct(etapas.conteo[e])}</span>

@@ -11,7 +11,7 @@ import { AREA_LABEL } from "@/domain/areas";
 import { ESTADO, type EstadoOS } from "@/domain/estados";
 import { dias as fmtDias } from "@/domain/format";
 import { SECCIONES, bloqueoPara, desplegadasPorDefecto, seccionAbierta, seccionVisible, type ClaveSeccion, type Expediente as TExpediente } from "@/domain/expediente";
-import { PUNTOS_ESPERA, desgloseEspera, diasEnEspera, diasTotales, porcentajeEspera, tramosPorEstado } from "@/domain/tiempos";
+import { PUNTOS_ESPERA, PUNTO_ESPERA, desgloseEspera, diasEnEspera, diasTotales, porcentajeEspera, tramosPorEstado } from "@/domain/tiempos";
 import { useCambiarEstado, useExpediente, useTransicionar } from "@/data/consultas";
 import { destinos, esTerminal, requiereFormulario, requiereMotivo } from "@/app/transiciones";
 import { ChipFueraDeBase } from "@/pages/catalogos/etiquetas";
@@ -126,7 +126,6 @@ function Encabezado({ exp, ahora }: { exp: TExpediente; ahora: string }) {
   const def = ESTADO[c.estado];
   const tramo = tramosPorEstado(eventos, ahora).at(-1);
   const terminal = esTerminal(c.estado);
-  const retenida = c.estado === "retenida";
 
   return (
     <Surface as="header" variante="strong" elevacion="raised" className={s.encabezado}>
@@ -164,12 +163,11 @@ function Encabezado({ exp, ahora }: { exp: TExpediente; ahora: string }) {
 
       {/* Si la O.S. espera, este es el número más grande del encabezado: tiene que incomodar. */}
       {tramo && !terminal && (
-        <div className={`${s.antiguedad} ${def.espera ? (retenida ? s.antiguedadRetenida : s.antiguedadEspera) : ""}`}>
+        <div className={`${s.antiguedad} ${def.espera ? s.antiguedadEspera : ""}`}>
           <span className={s.antiguedadValor}>{fmtDias(tramo.dias)}</span>
           <span className={s.antiguedadEtiqueta}>
             {tramo.dias === 1 ? "día" : "días"} en {def.label.toLowerCase()}
-            {def.espera && !retenida && " · esperando"}
-            {retenida && " · retenida"}
+            {def.espera && " · esperando"}
           </span>
         </div>
       )}
@@ -258,7 +256,7 @@ function LineaTiempo({ exp, ahora }: { exp: TExpediente; ahora: string }) {
         <ul className={s.puntos}>
           {PUNTOS_ESPERA.map((p) => (
             <li key={p}>
-              <span>{ESTADO[p].label}</span>
+              <span>{PUNTO_ESPERA[p]}</span>
               <b className={puntos[p] > 0 ? s.espera : undefined}>{fmtDias(puntos[p])} d</b>
             </li>
           ))}

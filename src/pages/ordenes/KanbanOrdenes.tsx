@@ -3,28 +3,23 @@ import { Surface } from "@/components/Surface/Surface";
 import { TarjetaOS } from "@/components/TarjetaOS/TarjetaOS";
 import { moneda, numero } from "@/domain/format";
 import { ETAPAS, ETAPA_LABEL, type Etapa } from "@/app/etapas";
+import { ESTADO } from "@/domain/estados";
 import { useKanbanOrdenes } from "@/app/useKanbanOrdenes";
 import { useTaller } from "@/app/useTaller";
 import styles from "./KanbanOrdenes.module.css";
 
 const NOTA: Record<Etapa, string> = {
-  diagnostico: "monto estimado",
-  cotizacion: "en captura y revisión",
-  autorizacion: "detenidas con el cliente",
-  compra_pago: "O.C. y tesorería",
-  reparacion: "en piso de taller",
-  entrega: "por remisionar",
+  programacion: "citas y recolecciones",
+  diagnostico: "en revisión del técnico",
+  cotizar: "con proveedores y presupuesto",
+  pendiente_autorizacion: "detenidas con el cliente",
+  autorizado_compra: "O.C., Dirección y Tesorería",
+  en_reparacion: "en piso de taller",
+  remision: "entregadas, por cerrar",
 };
 
-/** Autorización del cliente es punto de espera medible: se marca en ámbar. */
-const ES_ESPERA: Record<Etapa, boolean> = {
-  diagnostico: false,
-  cotizacion: false,
-  autorizacion: true,
-  compra_pago: false,
-  reparacion: false,
-  entrega: false,
-};
+/** Pte Autorización es punto de espera medible: se marca en ámbar. */
+const ES_ESPERA = (e: Etapa) => ESTADO[e].espera;
 
 export function KanbanOrdenes() {
   const taller = useTaller();
@@ -42,7 +37,7 @@ export function KanbanOrdenes() {
         {ETAPAS.map((etapa) => {
           const col = kanban?.[etapa];
           const titulo = ETAPA_LABEL[etapa];
-          const espera = ES_ESPERA[etapa];
+          const espera = ES_ESPERA(etapa);
           const restantes = col ? col.conteo - col.tarjetas.length : 0;
           return (
             <Surface

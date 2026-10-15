@@ -3,12 +3,12 @@ import { ESTADOS, ESTADO, TRANSICIONES, type EstadoOS } from "@/domain/estados";
 const posicion = (e: EstadoOS) => ESTADOS.indexOf(e);
 
 /**
- * Un cambio pide motivo cuando no es avance natural: rechazar, retener o
- * regresar a un estado anterior (O.C. rechazada, sobrecosto, espera de
- * refacción). Quién puede hacerlo lo decide el backend, no esta función.
+ * Un cambio pide motivo cuando no es avance natural: cancelar o regresar a un
+ * estatus anterior (recotizar, sobrecosto, unidad que vuelve a reparación).
+ * Quién puede hacerlo lo decide el backend, no esta función.
  */
 export function requiereMotivo(de: EstadoOS, a: EstadoOS): boolean {
-  if (a === "rechazada" || a === "retenida") return true;
+  if (a === "cancelada") return true;
   return posicion(a) < posicion(de);
 }
 
@@ -36,10 +36,11 @@ export function caminoRestante(desde: EstadoOS): EstadoOS[] {
 }
 
 /**
- * Estados a los que no se entra con un clic: piden su propio formulario.
- * "Unidad recibida" exige registrar la condición, las fotos y quién entrega.
+ * Estados a los que no se entra con un clic: piden su propio formulario. Pasar
+ * a "Diagnóstico / Requisición" es recibir la unidad: exige registrar la
+ * condición, las fotos y quién entrega.
  */
-export const requiereFormulario = (a: EstadoOS): boolean => a === "unidad_recibida";
+export const requiereFormulario = (a: EstadoOS): boolean => a === "diagnostico";
 
 /** Destinos que se pueden ejecutar desde el diálogo de cambio de estado. */
 export const destinosDirectos = (de: EstadoOS): EstadoOS[] => destinos(de).filter((d) => !requiereFormulario(d));

@@ -45,7 +45,7 @@ export function Component() {
 
   const { orden, unidad } = ingreso;
 
-  if (orden.estado !== "programada") {
+  if (orden.estado !== "programacion") {
     return (
       <div className={f.pagina}>
         <div className={f.migas}>

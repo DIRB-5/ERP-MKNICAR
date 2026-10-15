@@ -96,8 +96,6 @@
 /* En espera, la antigüedad es el dato más grande del encabezado. */
 .antiguedadEspera .antiguedadValor { font-size: 2.5rem; color: var(--warning); }
 .antiguedadEspera .antiguedadEtiqueta { color: var(--warning); }
-.antiguedadRetenida .antiguedadValor { font-size: 2.5rem; color: var(--critical); }
-.antiguedadRetenida .antiguedadEtiqueta { color: var(--critical); }
 
 .cambio {
   display: flex;

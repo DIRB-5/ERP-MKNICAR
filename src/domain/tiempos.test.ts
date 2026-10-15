@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { EstadoOS } from "./estados";
+import type { EstadoOC } from "./compras";
 import type { EventoOS } from "./bitacora";
 import {
   desgloseEspera,
@@ -21,7 +22,7 @@ function paso(estado: EstadoOS, d: number, antes?: EstadoOS): EventoOS {
   return {
     id: `e${n}`,
     osId: "OS-PRUEBA",
-    tipo: n === 1 ? "os_creada" : "cambio_estado",
+    tipo: antes ? "cambio_estado" : "os_creada",
     en: enDia(d),
     usuarioId: "u1",
     usuarioNombre: "Prueba",
@@ -30,6 +31,17 @@ function paso(estado: EstadoOS, d: number, antes?: EstadoOS): EventoOS {
     carga: {},
   } as EventoOS;
 }
+
+/** La O.C. reporta su estado: no mueve el de la O.S. */
+const oc = (folio: string, estado: EstadoOC, d: number): EventoOS => ({
+  id: `oc-${folio}-${d}`,
+  osId: "OS-PRUEBA",
+  tipo: "oc_vinculada",
+  en: enDia(d),
+  usuarioId: "u1",
+  usuarioNombre: "Compras",
+  carga: { folio, proveedor: "Proveedor", estado, monto: 1000 },
+});
 
 /** Una nota no mueve el estado: no debe crear tramos. */
 const nota = (d: number): EventoOS => ({
@@ -43,32 +55,23 @@ const nota = (d: number): EventoOS => ({
 });
 
 describe("tiempos de la O.S.", () => {
-  // programada 1 d · recibida 1 d · diagnóstico 2 d · ... · pendiente de autorización 3 d (espera)
-  // · presupuesto otra vez 1 d (retorno) · pendiente de autorización abierta desde el día 8.
+  // programación 1 d · diagnóstico 2 d · cotizar 1 d · Pte Autorización 3 d (espera)
+  // · cotizar otra vez 1 d (retorno) · Pte Autorización abierta desde el día 8.
   const eventos: EventoOS[] = [
-    paso("programada", 0),
-    paso("unidad_recibida", 1, "programada"),
-    paso("en_diagnostico", 2, "unidad_recibida"),
-    nota(3),
-    paso("presupuesto_elaborado", 4, "en_diagnostico"),
-    paso("pendiente_autorizacion", 4, "presupuesto_elaborado"),
-    paso("presupuesto_elaborado", 7, "pendiente_autorizacion"),
-    paso("pendiente_autorizacion", 8, "presupuesto_elaborado"),
+    paso("programacion", 0),
+    paso("diagnostico", 1, "programacion"),
+    nota(2),
+    paso("cotizar", 3, "diagnostico"),
+    paso("pendiente_autorizacion", 4, "cotizar"),
+    paso("cotizar", 7, "pendiente_autorizacion"),
+    paso("pendiente_autorizacion", 8, "cotizar"),
   ];
   const ahora = enDia(10); // el último tramo lleva 2 días abierto
 
   it("arma un tramo por cambio de estado, en orden, ignorando eventos que no mueven el estado", () => {
     const t = tramosPorEstado(eventos, ahora);
-    expect(t.map((x) => x.estado)).toEqual([
-      "programada",
-      "unidad_recibida",
-      "en_diagnostico",
-      "presupuesto_elaborado",
-      "pendiente_autorizacion",
-      "presupuesto_elaborado",
-      "pendiente_autorizacion",
-    ]);
-    expect(t.map((x) => x.dias)).toEqual([1, 1, 2, 0, 3, 1, 2]);
+    expect(t.map((x) => x.estado)).toEqual(["programacion", "diagnostico", "cotizar", "pendiente_autorizacion", "cotizar", "pendiente_autorizacion"]);
+    expect(t.map((x) => x.dias)).toEqual([1, 2, 1, 3, 1, 2]);
   });
 
   it("deja abierto el tramo actual y lo cuenta hasta ahora", () => {
@@ -86,21 +89,16 @@ describe("tiempos de la O.S.", () => {
     expect(porcentajeEspera(eventos, ahora)).toBe(50);
   });
 
-  it("desglosa la espera por punto medible y suma las visitas repetidas", () => {
-    expect(desgloseEspera(eventos, ahora)).toEqual({
-      pendiente_autorizacion: 5,
-      autorizacion_oc: 0,
-      en_proceso_pago: 0,
-      espera_refaccion: 0,
-    });
+  it("desglosa la espera del cliente y suma las visitas repetidas", () => {
+    expect(desgloseEspera(eventos, ahora)).toEqual({ cliente: 5, direccion: 0, tesoreria: 0, proveedor: 0 });
   });
 
   it("no acumula días después de un estado terminal", () => {
-    const cerrada = [...eventos, paso("rechazada", 12, "pendiente_autorizacion")];
-    const t = tramosPorEstado(cerrada, enDia(30));
-    expect(t.at(-1)).toMatchObject({ estado: "rechazada", dias: 0 });
-    expect(diasTotales(cerrada, enDia(30))).toBe(12);
-    expect(diasEnEspera(cerrada, enDia(30))).toBe(7);
+    const cancelada = [...eventos, paso("cancelada", 12, "pendiente_autorizacion")];
+    const t = tramosPorEstado(cancelada, enDia(30));
+    expect(t.at(-1)).toMatchObject({ estado: "cancelada", dias: 0 });
+    expect(diasTotales(cancelada, enDia(30))).toBe(12);
+    expect(diasEnEspera(cancelada, enDia(30))).toBe(7);
   });
 
   it("no depende del orden en que llegan los eventos", () => {
@@ -112,18 +110,53 @@ describe("tiempos de la O.S.", () => {
   it("devuelve cero sin eventos y en una O.S. recién creada", () => {
     expect(tramosPorEstado([], ahora)).toEqual([]);
     expect(porcentajeEspera([], ahora)).toBe(0);
-    const recien = [paso("programada", 10)];
+    const recien = [paso("programacion", 10)];
     expect(diasTotales(recien, ahora)).toBe(0);
     expect(porcentajeEspera(recien, ahora)).toBe(0);
   });
 
   it("lista los estados visitados una sola vez", () => {
-    expect([...estadosVisitados(eventos)]).toEqual([
-      "programada",
-      "unidad_recibida",
-      "en_diagnostico",
-      "presupuesto_elaborado",
-      "pendiente_autorizacion",
-    ]);
+    expect([...estadosVisitados(eventos)]).toEqual(["programacion", "diagnostico", "cotizar", "pendiente_autorizacion"]);
+  });
+});
+
+describe("esperas medidas en la O.C.", () => {
+  // La O.S. entra a Autorizado a compra el día 2. La O.C. pasa 2 días en
+  // autorización (Dirección), 1 por pagar (Tesorería) y 3 con el proveedor.
+  const base: EventoOS[] = [
+    paso("programacion", 0),
+    paso("diagnostico", 0, "programacion"),
+    paso("cotizar", 0, "diagnostico"),
+    paso("pendiente_autorizacion", 1, "cotizar"),
+    paso("autorizado_compra", 2, "pendiente_autorizacion"),
+    oc("OC-1", "en_autorizacion", 2),
+    oc("OC-1", "autorizada", 4),
+    oc("OC-1", "enviada_proveedor", 5),
+    oc("OC-1", "recibida_total", 8),
+    paso("en_reparacion", 8, "autorizado_compra"),
+  ];
+
+  it("toma Dirección, Tesorería y proveedor de los estados que reporta la O.C.", () => {
+    expect(desgloseEspera(base, enDia(10))).toEqual({ cliente: 1, direccion: 2, tesoreria: 1, proveedor: 3 });
+    expect(diasEnEspera(base, enDia(10))).toBe(7);
+    expect(porcentajeEspera(base, enDia(10))).toBe(70);
+  });
+
+  it("cuenta una sola vez dos O.C. esperando a la vez", () => {
+    // OC-2 espera a Dirección del día 3 al 5: se encima con OC-1 (días 2 a 4).
+    const paralelas = [...base, oc("OC-2", "en_autorizacion", 3), oc("OC-2", "enviada_proveedor", 5), oc("OC-2", "recibida_total", 7)];
+    expect(desgloseEspera(paralelas, enDia(10)).direccion).toBe(3);
+    // La unión total sigue siendo del día 1 al 8: 7 días.
+    expect(diasEnEspera(paralelas, enDia(10))).toBe(7);
+  });
+
+  it("deja de contar la espera de una O.C. cuando la O.S. termina", () => {
+    const abierta = [
+      paso("programacion", 0),
+      paso("autorizado_compra", 1, "programacion"),
+      oc("OC-9", "en_autorizacion", 1),
+      paso("cancelada", 3, "autorizado_compra"),
+    ];
+    expect(desgloseEspera(abierta, enDia(20)).direccion).toBe(2);
   });
 });
